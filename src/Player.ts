@@ -3,12 +3,14 @@ export class Player {
   y: number;
   health: number;
   readonly maxHealth: number;
+  inventory: string[] = [];
 
   constructor(x: number, y: number, maxHealth: number = 3) {
     this.x = x;
     this.y = y;
     this.maxHealth = maxHealth;
     this.health = maxHealth;
+    this.inventory = [ "rock", "rock", "wasps' nest" ];
   }
 
   get isAlive(): boolean {
