@@ -35,10 +35,17 @@ export class Renderer {
   }
 
   drawUi(state: GameState): void {
-    // Status bar on row 0
-    const status = `HP: 10/10  Score: ${state.score}  ${state.player.y},${state.player.x}`;
-    for (let i = 0; i < Math.min(status.length, this.width); i++) {
-      this.display.draw(i, 0, status[i], "#aaa", "#111");
+    let col = 1;
+
+    for (let i = 0; i < state.player.maxHealth; i++) {
+      const filled = i < state.player.health;
+      this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#e00" : "#500", "#111");
+    }
+
+    // Rest of status
+    const rest = `  Score: ${state.score}  ${state.player.y},${state.player.x}`;
+    for (let i = 0; i < Math.min(rest.length, this.width - col); i++) {
+      this.display.draw(col++, 0, rest[i], "#aaa", "#111");
     }
 
     // Message log on the last 3 rows: newest at bottom, oldest at top

@@ -1,9 +1,5 @@
 import * as ROT from "rot-js";
-
-export interface Player {
-  x: number;
-  y: number;
-}
+import { Player } from "./Player";
 
 export class GameState {
   readonly width: number;
@@ -15,7 +11,7 @@ export class GameState {
   visible: Record<string, boolean> = {};
   explored: Record<string, boolean> = {};
 
-  player: Player = { x: 0, y: 0 };
+  player!: Player;
   score = 0;
   messages: string[] = ["Move with arrow keys or WASD. Walk over * to collect items."];
 
@@ -42,7 +38,7 @@ export class GameState {
 
     const playerStart = this.freeCells[Math.floor(ROT.RNG.getUniform() * this.freeCells.length)];
     const [px, py] = playerStart.split(",").map(Number);
-    this.player = { x: px, y: py };
+    this.player = new Player(px, py);
 
     for (let i = 0; i < 10; i++) {
       const key = this.freeCells[Math.floor(ROT.RNG.getUniform() * this.freeCells.length)];
@@ -78,7 +74,8 @@ export class GameState {
       this.addMessage("Blocked!");
       return;
     }
-    this.player = { x: nx, y: ny };
+    this.player.x = nx;
+    this.player.y = ny;
     if (this.items[key]) {
       this.score++;
       this.addMessage(`Picked up an item! (${this.score} total)`);
