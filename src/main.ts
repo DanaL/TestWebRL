@@ -2,10 +2,12 @@ import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 
 const WIDTH = 80;
-const HEIGHT = 32;
+const MAP_ROWS = 32;
+const NUM_MSG_ROWS = 3;
+const DISPLAY_HEIGHT = 1 + MAP_ROWS + NUM_MSG_ROWS;
 
-const state = new GameState(WIDTH, HEIGHT);
-const renderer = new Renderer(WIDTH, HEIGHT, 18);
+const state = new GameState(WIDTH, MAP_ROWS);
+const renderer = new Renderer(WIDTH, DISPLAY_HEIGHT, 18);
 
 document.getElementById("app")!.appendChild(renderer.getContainer());
 

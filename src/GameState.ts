@@ -17,7 +17,7 @@ export class GameState {
 
   player: Player = { x: 0, y: 0 };
   score = 0;
-  message = "Move with arrow keys or WASD. Walk over * to collect items.";
+  messages: string[] = ["Move with arrow keys or WASD. Walk over * to collect items."];
 
   private fov: ROT.FOV.PreciseShadowcasting;
 
@@ -25,7 +25,7 @@ export class GameState {
     this.width = width;
     this.height = height;
 
-    const caver = new ROT.Map.Cellular(width, height -2);
+    const caver = new ROT.Map.Cellular(width, height);
     caver.randomize(0.45);
     for (let i = 0; i < 2; i++)
       caver.create();
@@ -65,21 +65,24 @@ export class GameState {
     });
   }
 
+  addMessage(msg: string): void {
+    this.messages.unshift(msg);
+    if (this.messages.length > 3) this.messages.length = 3;
+  }
+
   tryMove(dx: number, dy: number): void {
     const nx = this.player.x + dx;
     const ny = this.player.y + dy;
     const key = `${nx},${ny}`;
     if (this.map[key] !== ".") {
-      this.message = "Blocked!";
+      this.addMessage("Blocked!");
       return;
     }
     this.player = { x: nx, y: ny };
     if (this.items[key]) {
       this.score++;
-      this.message = `Picked up an item! (${this.score} total)`;
+      this.addMessage(`Picked up an item! (${this.score} total)`);
       delete this.items[key];
-    } else {
-      this.message = "";
     }
   }
 }
