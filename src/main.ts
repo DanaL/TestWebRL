@@ -20,6 +20,15 @@ game.pushPopup(popup);
 
 game.pushInputController(new PlayerCommandController(game));
 game.state.computeFov();
-game.render();
 
-window.addEventListener("keydown", (e) => game.handleInput(e));
+window.addEventListener("keydown", (e) => game.queueInput(e));
+
+let lastTime = 0;
+function gameLoop(timestamp: number): void {
+  const deltaMs = timestamp - lastTime;
+  lastTime = timestamp;
+  game.update(deltaMs);
+  game.render();
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);

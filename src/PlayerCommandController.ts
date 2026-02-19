@@ -21,6 +21,5 @@ export class PlayerCommandController extends InputController {
     e.preventDefault();
     this.game.state.tryMove(dir[0], dir[1]);
     this.game.state.computeFov();
-    this.game.render();
   }
 }

@@ -9,6 +9,7 @@ export class Game {
 
   private controllerStack: InputController[] = [];
   private popupStack: Popup[] = [];
+  private inputQueue: KeyboardEvent[] = [];
 
   constructor(state: GameState, renderer: Renderer) {
     this.state = state;
@@ -43,7 +44,18 @@ export class Game {
     }
   }
 
-  handleInput(e: KeyboardEvent): void {
-    this.currentController?.handleInput(e);
+  queueInput(e: KeyboardEvent): void {
+    this.inputQueue.push(e);
+  }
+
+  get isAnimating(): boolean {
+    return false; // stub — set to true while animations are playing
+  }
+
+  update(_deltaMs: number): void {
+    if (!this.isAnimating && this.inputQueue.length > 0) {
+      const e = this.inputQueue.shift()!;
+      this.currentController?.handleInput(e);
+    }
   }
 }
