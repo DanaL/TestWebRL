@@ -22,6 +22,10 @@ export class Renderer {
     this.display.draw(col, row, ch, fg, bg);
   }
 
+  drawText(row: number, col: number, txt: string, fg: string, bg: string): void {
+    this.display.draw(col, row, txt, fg, bg);
+  }
+
   drawGameArea(state: GameState): void {
     this.display.clear();
     for (const key in state.map) {
@@ -35,7 +39,7 @@ export class Renderer {
         this.display.draw(x, drawY, state.map[key], "#222", null);
       }
     }
-    this.display.draw(state.player.x, state.player.y + this.MAP_Y, "k", "#0f0", null);
+    this.display.draw(state.player.x, state.player.y + this.MAP_Y, "k", "#91db69", null);
   }
 
   drawUi(state: GameState): void {
@@ -43,7 +47,7 @@ export class Renderer {
 
     for (let i = 0; i < state.player.maxHealth; i++) {
       const filled = i < state.player.health;
-      this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#e00" : "#500", "#111");
+      this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#ae2334" : "#500", "#111");
     }
 
     const rest = `  Score: ${state.score}  ${state.player.y},${state.player.x}`;
