@@ -2,6 +2,7 @@ import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 import { Game } from "./Game";
 import { PlayerCommandController } from "./PlayerCommandController";
+import { Popup } from "./Popup";
 
 const WIDTH = 80;
 const MAP_ROWS = 32;
@@ -14,7 +15,10 @@ const game = new Game(state, renderer);
 
 document.getElementById("app")!.appendChild(renderer.getContainer());
 
-game.push(new PlayerCommandController(game));
+const popup = new Popup("Welcome to Snerk the Sneak", "This is just a tech demo", 3, 10, 50);
+game.pushPopup(popup);
+
+game.pushInputController(new PlayerCommandController(game));
 game.state.computeFov();
 game.render();
 

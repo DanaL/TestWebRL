@@ -18,7 +18,11 @@ export class Renderer {
 
   private readonly MAP_Y = 1; // row 0 is the status bar
 
-  draw(state: GameState): void {
+  drawChar(row: number, col: number, ch: string, fg: string, bg: string): void {
+    this.display.draw(col, row, ch, fg, bg);
+  }
+
+  drawGameArea(state: GameState): void {
     this.display.clear();
     for (const key in state.map) {
       const [x, y] = key.split(",").map(Number);
@@ -42,13 +46,12 @@ export class Renderer {
       this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#e00" : "#500", "#111");
     }
 
-    // Rest of status
     const rest = `  Score: ${state.score}  ${state.player.y},${state.player.x}`;
     for (let i = 0; i < Math.min(rest.length, this.width - col); i++) {
       this.display.draw(col++, 0, rest[i], "#aaa", "#111");
     }
 
-    // Message log on the last 3 rows: newest at bottom, oldest at top
+    // Write message log
     const msgColors = ["#444", "#777", "#bbb"]; // oldest → newest
     const msgStartY = this.height - 3;
     for (let age = 0; age < 3; age++) {
