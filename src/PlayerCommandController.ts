@@ -1,7 +1,7 @@
-import { InputController, InfoPopupController } from "./InputController";
+import { InputController } from "./InputController";
 import { Game } from "./Game";
-import { Popup } from "./Popup";
 import { indefArticle } from "./Utils";
+import { InventoryMenu, MenuController } from "./Inventory";
 
 const MOVE_KEYS: Record<string, [number, number]> = {
   ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
@@ -23,9 +23,12 @@ export class PlayerCommandController extends InputController {
         txt += indefArticle(item) + "\n";
       }
 
-      const popup = new Popup("Inventory", txt.trim(), 3, 10, 30);
+      //const popup = new InventoryMenu("Inventory", txt.trim(), 3, 10, 30);
+      const popup = new InventoryMenu("Inventory", "You are empty handed.", this.game.state.player.inventory, 3, 10);
+      const controller = new MenuController(popup, this.game);
+
       this.game.pushPopup(popup);
-      this.game.pushInputController(new InfoPopupController(this.game));
+      this.game.pushInputController(controller);
 
       return;
     }

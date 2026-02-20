@@ -2,11 +2,11 @@ import { LineScanner } from "./LineScanner";
 import { Renderer } from "./Renderer";
 
 export class Popup {
-  private title: string;
-  private text: string;
-  private maxWidth: number;
-  private row: number;
-  private col: number;
+  protected title: string;
+  protected text: string;
+  protected maxWidth: number;
+  protected row: number;
+  protected col: number;
 
   constructor(title: string, text: string, row: number, col: number, maxWidth: number = -1){
     this.title = title;
@@ -16,24 +16,35 @@ export class Popup {
     this.col = col;
   }
 
-  draw(renderer: Renderer)
-  {
-    let scanner = new LineScanner(this.title);
-    let titleTokens = scanner.scan();
-    scanner = new LineScanner(this.text);
-    let textTokens = scanner.scan();
-
+  draw(renderer: Renderer): void {
     let row = this.row;
     let col = this.col;
 
     renderer.drawChar(row, col++, '┌', "#fff", "#000");
-    for (; col < this.maxWidth + 2; col++) {
+    for (; col < this.col + this.maxWidth + 3; col++) {
       renderer.drawChar(row, col, '─', "#fff", "#000");
     }
     renderer.drawChar(row, col++, '┐', "#fff", "#000");
     ++row;
 
-    if (this.title != "") {
+    row = this.drawContent(renderer, row);
+
+    this.drawBlankRow(renderer, row++);
+
+    col = this.col;
+    renderer.drawChar(row, col++, '└', "#fff", "#000");
+    for (; col < this.col + this.maxWidth + 3; col++) {
+      renderer.drawChar(row, col, '─', "#fff", "#000");
+    }
+    renderer.drawChar(row, col++, '┘', "#fff", "#000");
+  }
+
+  protected drawContent(renderer: Renderer, row: number): number {
+    const titleTokens = new LineScanner(this.title).scan();
+    const textTokens = new LineScanner(this.text).scan();
+    let col: number;
+
+    if (this.title !== "") {
       col = this.col;
       renderer.drawChar(row, col++, '│', "#FFF", "#000");
       renderer.drawChar(row, col++, ' ', "#FFF", "#000");
@@ -44,7 +55,7 @@ export class Popup {
         }
       }
 
-      while (col <= this.maxWidth + 1) {
+      while (col <= this.col + this.maxWidth + 2) {
         renderer.drawChar(row, col++, ' ', "#FFF", "#000");
       }
       renderer.drawChar(row, col++, '│', "#FFF", "#000");
@@ -60,7 +71,7 @@ export class Popup {
         continue;
       }
 
-      if (col + token.text.length > this.maxWidth + 2) {
+      if (col + token.text.length > this.col + this.maxWidth + 2) {
         this.closeContentRow(renderer, row++, col);
         col = this.openContentRow(renderer, row);
       }
@@ -71,32 +82,27 @@ export class Popup {
     }
     this.closeContentRow(renderer, row++, col);
 
-    col = this.col;
-    renderer.drawChar(row, col++, '└', "#fff", "#000");
-    for (; col < this.maxWidth + 2; col++) {
-      renderer.drawChar(row, col, '─', "#fff", "#000");
-    }
-    renderer.drawChar(row, col++, '┘', "#fff", "#000");
+    return row;
   }
 
-  private openContentRow(renderer: Renderer, row: number): number {
+  protected openContentRow(renderer: Renderer, row: number): number {
     let col = this.col;
     renderer.drawChar(row, col++, '│', "#FFF", "#000");
     renderer.drawChar(row, col++, ' ', "#FFF", "#000");
     return col;
   }
 
-  private closeContentRow(renderer: Renderer, row: number, col: number): void {
-    while (col <= this.maxWidth + 1) {
+  protected closeContentRow(renderer: Renderer, row: number, col: number): void {
+    while (col <= this.col + this.maxWidth + 2) {
       renderer.drawChar(row, col++, ' ', "#FFF", "#000");
     }
     renderer.drawChar(row, col, '│', "#FFF", "#000");
   }
 
-  private drawBlankRow(renderer: Renderer, row: number): void {
+  protected drawBlankRow(renderer: Renderer, row: number): void {
     let col = this.col;
     renderer.drawChar(row, col++, '│', "#FFF", "#000");
-    while (col <= this.maxWidth + 1) {
+    while (col <= this.col + this.maxWidth + 2) {
       renderer.drawChar(row, col++, ' ', "#FFF", "#000");
     }
     renderer.drawChar(row, col, '│', "#FFF", "#000");
