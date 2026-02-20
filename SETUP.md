@@ -65,3 +65,4 @@ TestWebRL/
 
 - Vite is pinned to v5 for Node 20.x compatibility. If you upgrade Node to 20.19+ or 22.12+, you can run `npm install vite@latest --save-dev` to move to Vite 7.
 - rot-js docs: https://ondras.github.io/rot.js/manual/
+- I'm using https://lospec.com/palette-list/cc-29 for the colour palette

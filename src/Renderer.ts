@@ -33,13 +33,13 @@ export class Renderer {
       const drawY = y + this.MAP_Y;
       if (state.visible[key]) {
         const ch = state.items[key] || state.map[key];
-        const fg = state.items[key] ? "#ff0" : state.map[key] === "#" ? "#888" : "#444";
+        const fg = state.items[key] ? "#ede19e" : state.map[key] === "#" ? "#888" : "#444";
         this.display.draw(x, drawY, ch, fg, null);
       } else if (state.explored[key]) {
         this.display.draw(x, drawY, state.map[key], "#222", null);
       }
     }
-    this.display.draw(state.player.x, state.player.y + this.MAP_Y, "k", "#91db69", null);
+    this.display.draw(state.player.x, state.player.y + this.MAP_Y, "k", "#8ab060", null);
   }
 
   drawUi(state: GameState): void {
@@ -47,7 +47,7 @@ export class Renderer {
 
     for (let i = 0; i < state.player.maxHealth; i++) {
       const filled = i < state.player.health;
-      this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#ae2334" : "#500", "#111");
+      this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#b45252" : "#500", "#111");
     }
 
     const rest = `  Score: ${state.score}  ${state.player.y},${state.player.x}`;
