@@ -29,20 +29,30 @@ export class Renderer {
 
   drawGameArea(state: GameState): void {
     this.display.clear();
+
+    const vpW = this.width;
+    const vpH = this.height - this.MAP_Y - 3; // minus status bar and 3 message rows
+    const camX = Math.max(0, Math.min(state.width  - vpW, state.player.x - Math.floor(vpW / 2)));
+    const camY = Math.max(0, Math.min(state.height - vpH, state.player.y - Math.floor(vpH / 2)));
+
     for (const key in state.map) {
-      const [x, y] = key.split(",").map(Number);
-      const drawY = y + this.MAP_Y;
+      const [wx, wy] = key.split(",").map(Number);
+      const sx = wx - camX;
+      const sy = wy - camY;
+      if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH) continue;
+
       if (state.visible[key]) {
         const def = TERRAIN_DEF[state.map[key]];
         const ch = state.items[key] ?? def.glyph;
         const fg = state.items[key] ? "#ede19e" : def.fg;
-        this.display.draw(x, drawY, ch, fg, null);
+        this.display.draw(sx, sy + this.MAP_Y, ch, fg, null);
       } else if (state.explored[key]) {
         const def = TERRAIN_DEF[state.map[key]];
-        this.display.draw(x, drawY, def.glyph, "#222", null);
+        this.display.draw(sx, sy + this.MAP_Y, def.glyph, "#222", null);
       }
     }
-    this.display.draw(state.player.x, state.player.y + this.MAP_Y, "k", "#8ab060", null);
+
+    this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#8ab060", null);
   }
 
   drawUi(state: GameState): void {

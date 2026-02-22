@@ -15,6 +15,7 @@ export class GameState {
   explored: Record<string, boolean> = {};
 
   player!: Player;
+  fovRadius = 10;
   score = 0;
   messages: string[] = ["Move with arrow keys or WASD. Walk over * to collect items."];
 
@@ -44,7 +45,7 @@ export class GameState {
 
   computeFov(): void {
     for (const k in this.visible) delete this.visible[k];
-    this.fov.compute(this.player.x, this.player.y, 10, (x: number, y: number, _r: number, visibility: number) => {
+    this.fov.compute(this.player.x, this.player.y, this.fovRadius, (x: number, y: number, _r: number, visibility: number) => {
       if (visibility) {
         const key = `${x},${y}`;
         this.visible[key] = true;
