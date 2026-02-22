@@ -1,5 +1,6 @@
 import * as ROT from "rot-js";
 import { GameState } from "./GameState";
+import { TERRAIN_DEF } from "./Terrain";
 
 export class Renderer {
   private display: ROT.Display;
@@ -32,11 +33,13 @@ export class Renderer {
       const [x, y] = key.split(",").map(Number);
       const drawY = y + this.MAP_Y;
       if (state.visible[key]) {
-        const ch = state.items[key] || state.map[key];
-        const fg = state.items[key] ? "#ede19e" : state.map[key] === "#" ? "#888" : "#444";
+        const def = TERRAIN_DEF[state.map[key]];
+        const ch = state.items[key] ?? def.glyph;
+        const fg = state.items[key] ? "#ede19e" : def.fg;
         this.display.draw(x, drawY, ch, fg, null);
       } else if (state.explored[key]) {
-        this.display.draw(x, drawY, state.map[key], "#222", null);
+        const def = TERRAIN_DEF[state.map[key]];
+        this.display.draw(x, drawY, def.glyph, "#222", null);
       }
     }
     this.display.draw(state.player.x, state.player.y + this.MAP_Y, "k", "#8ab060", null);

@@ -1,11 +1,14 @@
 import * as ROT from "rot-js";
 import { Player } from "./Player";
+import { TERRAIN_DEF } from "./Terrain";
+import type { TerrainType } from "./Terrain";
+import { loadMap } from "./MapLoader";
 
 export class GameState {
   readonly width: number;
   readonly height: number;
 
-  map: Record<string, string> = {};
+  map: Record<string, TerrainType> = {};
   freeCells: string[] = [];
   items: Record<string, string> = {};
   visible: Record<string, boolean> = {};
@@ -17,24 +20,12 @@ export class GameState {
 
   private fov: ROT.FOV.PreciseShadowcasting;
 
-  constructor(width: number, height: number) {
-    this.width = width;
-    this.height = height;
-
-    const caver = new ROT.Map.Cellular(width, height);
-    caver.randomize(0.45);
-    for (let i = 0; i < 2; i++)
-      caver.create();
-
-    caver.create((x: number, y: number, wall: number) => {
-      const key = `${x},${y}`;
-      if (wall) {
-        this.map[key] = "#";
-      } else {
-        this.map[key] = ".";
-        this.freeCells.push(key);
-      }
-    });
+  constructor() {
+    const loaded = loadMap();
+    this.width = loaded.width;
+    this.height = loaded.height;
+    this.map = loaded.map;
+    this.freeCells = loaded.freeCells;
 
     const playerStart = this.freeCells[Math.floor(ROT.RNG.getUniform() * this.freeCells.length)];
     const [px, py] = playerStart.split(",").map(Number);
@@ -46,7 +37,8 @@ export class GameState {
     }
 
     this.fov = new ROT.FOV.PreciseShadowcasting((x, y) => {
-      return this.map[`${x},${y}`] === ".";
+      const terrain = this.map[`${x},${y}`];
+      return terrain !== undefined && !TERRAIN_DEF[terrain].opaque;
     });
   }
 
@@ -70,7 +62,8 @@ export class GameState {
     const nx = this.player.x + dx;
     const ny = this.player.y + dy;
     const key = `${nx},${ny}`;
-    if (this.map[key] !== ".") {
+    const terrain = this.map[key];
+    if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
       this.addMessage("Blocked!");
       return;
     }

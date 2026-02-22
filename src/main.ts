@@ -5,13 +5,11 @@ import { InfoPopupController } from "./InputController";
 import { PlayerCommandController } from "./PlayerCommandController";
 import { Popup } from "./Popup";
 
-const WIDTH = 80;
-const MAP_ROWS = 32;
 const NUM_MSG_ROWS = 3;
-const DISPLAY_HEIGHT = 1 + MAP_ROWS + NUM_MSG_ROWS;
 
-const state = new GameState(WIDTH, MAP_ROWS);
-const renderer = new Renderer(WIDTH, DISPLAY_HEIGHT, 18);
+const state = new GameState();
+const DISPLAY_HEIGHT = 1 + state.height + NUM_MSG_ROWS;
+const renderer = new Renderer(state.width, DISPLAY_HEIGHT, 18);
 const game = new Game(state, renderer);
 
 document.getElementById("app")!.appendChild(renderer.getContainer());
