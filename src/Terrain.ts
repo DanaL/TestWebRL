@@ -9,8 +9,7 @@ const Terrain = {
   VWindow: 7,
   Mountain: 8,
   Bridge: 9,
-  OpenDoor: 10,
-  ClosedDoor: 11,
+  Door: 10,
   Goal: 12,
 } as const;
 
@@ -34,8 +33,7 @@ const TERRAIN_DEF: Record<TerrainType, TerrainDef> = {
   [Terrain.VWindow]: { glyph: '|', fg: '#f2f0e5', walkable: false, opaque: false },
   [Terrain.Mountain]: { glyph: 'Λ', fg: '#868188', walkable: false, opaque: true },
   [Terrain.Bridge]: { glyph: '=', fg: '#80493a', walkable: true, opaque: false },
-  [Terrain.OpenDoor]: { glyph: '\\', fg: '#a77b5b', walkable: true, opaque: false },
-  [Terrain.ClosedDoor]: { glyph: '+', fg: '#a77b5b', walkable: false, opaque: true },
+  [Terrain.Door]: { glyph: '+', fg: '#a77b5b', walkable: true, opaque: true },
   [Terrain.Goal]: { glyph: '>', fg: '#68c2d3', walkable: true, opaque: false }
 };
 

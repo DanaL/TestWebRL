@@ -10,7 +10,7 @@ const CHAR_TO_TERRAIN: Record<string, TerrainType> = {
   '#': Terrain.Wall,
   ' ': Terrain.Floor,
   "'": Terrain.Road,
-  '+': Terrain.ClosedDoor,
+  '+': Terrain.Door,
   '-': Terrain.HWindow,
   '|': Terrain.VWindow,
   '=': Terrain.Bridge,

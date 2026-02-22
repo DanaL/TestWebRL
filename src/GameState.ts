@@ -39,6 +39,8 @@ export class GameState {
     }
 
     this.fov = new ROT.FOV.PreciseShadowcasting((x, y) => {
+      if (x === this.player.x && y === this.player.y) 
+        return true;
       const terrain = this.map[`${x},${y}`];
       return terrain !== undefined && !TERRAIN_DEF[terrain].opaque;
     });
