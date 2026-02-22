@@ -14,6 +14,7 @@ const CHAR_TO_TERRAIN: Record<string, TerrainType> = {
   '-': Terrain.HWindow,
   '|': Terrain.VWindow,
   '=': Terrain.Bridge,
+  '>': Terrain.Goal
 };
 
 export interface LoadedMap {

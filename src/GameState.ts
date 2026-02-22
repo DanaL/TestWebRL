@@ -1,6 +1,9 @@
 import * as ROT from "rot-js";
 import { Player } from "./Player";
-import { TERRAIN_DEF } from "./Terrain";
+import { Game } from "./Game";
+import { Popup } from "./Popup";
+import { InfoPopupController } from "./InputController";
+import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { loadMap } from "./MapLoader";
 
@@ -28,9 +31,7 @@ export class GameState {
     this.map = loaded.map;
     this.freeCells = loaded.freeCells;
 
-    const playerStart = this.freeCells[Math.floor(ROT.RNG.getUniform() * this.freeCells.length)];
-    const [px, py] = playerStart.split(",").map(Number);
-    this.player = new Player(6, 55);
+    this.player = new Player(6, 48);
 
     for (let i = 0; i < 10; i++) {
       const key = this.freeCells[Math.floor(ROT.RNG.getUniform() * this.freeCells.length)];
@@ -59,15 +60,21 @@ export class GameState {
     if (this.messages.length > 3) this.messages.length = 3;
   }
 
-  tryMove(dx: number, dy: number): void {
+  tryMove(dx: number, dy: number, game: Game): void {
     const nx = this.player.x + dx;
     const ny = this.player.y + dy;
     const key = `${nx},${ny}`;
     const terrain = this.map[key];
     if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
-      this.addMessage("Blocked!");
+      this.addMessage("You cannot go that way!");
       return;
     }
+    else if (terrain === Terrain.Goal) {      
+      const popup = new Popup("", "You need to return with the stolen egg or risk the wrath of [#b45252 Skittlebix]!", 3, 10, 50);
+      game.pushPopup(popup);
+      game.pushInputController(new InfoPopupController(game));
+    }
+
     this.player.x = nx;
     this.player.y = ny;
     if (this.items[key]) {

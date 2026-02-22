@@ -23,7 +23,6 @@ export class PlayerCommandController extends InputController {
         txt += indefArticle(item) + "\n";
       }
 
-      //const popup = new InventoryMenu("Inventory", txt.trim(), 3, 10, 30);
       const popup = new InventoryMenu("Inventory", "You are empty handed.", this.game.state.player.inventory, 3, 10);
       const controller = new MenuController(popup, this.game);
 
@@ -36,7 +35,7 @@ export class PlayerCommandController extends InputController {
     const dir = MOVE_KEYS[e.key];
     if (dir) {
       e.preventDefault();
-      this.game.state.tryMove(dir[0], dir[1]);
+      this.game.state.tryMove(dir[0], dir[1], this.game);
       this.game.state.computeFov();
     }
   }

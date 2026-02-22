@@ -11,6 +11,7 @@ const Terrain = {
   Bridge: 9,
   OpenDoor: 10,
   ClosedDoor: 11,
+  Goal: 12,
 } as const;
 
 type TerrainType = typeof Terrain[keyof typeof Terrain];
@@ -34,7 +35,8 @@ const TERRAIN_DEF: Record<TerrainType, TerrainDef> = {
   [Terrain.Mountain]: { glyph: 'Λ', fg: '#868188', walkable: false, opaque: true },
   [Terrain.Bridge]: { glyph: '=', fg: '#80493a', walkable: true, opaque: false },
   [Terrain.OpenDoor]: { glyph: '\\', fg: '#a77b5b', walkable: true, opaque: false },
-  [Terrain.ClosedDoor]: { glyph: '+', fg: '#a77b5b', walkable: false, opaque: true }
+  [Terrain.ClosedDoor]: { glyph: '+', fg: '#a77b5b', walkable: false, opaque: true },
+  [Terrain.Goal]: { glyph: '>', fg: '#68c2d3', walkable: true, opaque: false }
 };
 
 export { Terrain, type TerrainType, TERRAIN_DEF };

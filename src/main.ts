@@ -20,7 +20,7 @@ document.getElementById("app")!.appendChild(renderer.getContainer());
 game.pushInputController(new PlayerCommandController(game));
 
 // Greetings pop-up
-const popup = new Popup("[#8ab060 Welcome to Snerk the Sneak!!]", "This is just a tech demo for a web-based game I plan to make for the 2026 7DRL.\n\nMove around with the [#6a536e arrow keys] or [#6a536e WASD] and pick up treasure.", 3, 10, 50);
+const popup = new Popup("[#8ab060 Welcome to Snerk the Sneak!!]", "This is just a tech demo for a web-based game I plan to make for the 2026 7DRL.\n\nMove around with the [#6a536e arrow keys] or [#6a536e WASD]\n\nSteal back the dragon egg from the filthy humans and return it to your cave (the [#68c2d3 >])!", 3, 10, 50);
 game.pushPopup(popup);
 game.pushInputController(new InfoPopupController(game));
 game.state.computeFov();
