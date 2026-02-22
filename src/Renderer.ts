@@ -52,7 +52,7 @@ export class Renderer {
       }
     }
 
-    this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#8ab060", null);
+    this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#b45252", null);
   }
 
   drawUi(state: GameState): void {

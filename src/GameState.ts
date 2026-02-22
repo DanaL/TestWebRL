@@ -30,7 +30,7 @@ export class GameState {
 
     const playerStart = this.freeCells[Math.floor(ROT.RNG.getUniform() * this.freeCells.length)];
     const [px, py] = playerStart.split(",").map(Number);
-    this.player = new Player(px, py);
+    this.player = new Player(6, 55);
 
     for (let i = 0; i < 10; i++) {
       const key = this.freeCells[Math.floor(ROT.RNG.getUniform() * this.freeCells.length)];
