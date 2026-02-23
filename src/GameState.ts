@@ -65,24 +65,43 @@ export class GameState {
     if (this.messages.length > 3) this.messages.length = 3;
   }
 
-  tryMove(dx: number, dy: number, game: Game): void {
-    const nx = this.player.x + dx;
-    const ny = this.player.y + dy;
-    const key = `${nx},${ny}`;
-    const terrain = this.map[key];
-    if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
-      this.addMessage("You cannot go that way!");
-      return;
-    }
-    else if (terrain === Terrain.Goal) {      
-      const popup = new Popup("", "You need to return with the stolen egg or risk the wrath of [#b45252 Skittlebix]!", 3, 10, 50);
-      game.pushPopup(popup);
-      game.pushInputController(new InfoPopupController(game));
+  private occupied(x: number, y: number) {
+    if (this.player.x === x && this.player.y === y)
+      return true;
+
+    for (const actor of this.villagers) {
+      if (actor.x === x && actor.y === y)
+      return true;
     }
 
-    this.player.x = nx;
-    this.player.y = ny;
-    if (this.items[key]) {
+    return false;
+  }
+
+  tryMove(dx: number, dy: number, game: Game | null, actor: Actor): void {
+    const nx = actor.x + dx;
+    const ny = actor.y + dy;
+    const key = `${nx},${ny}`;
+    const terrain = this.map[key];
+
+    if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
+      if (actor instanceof Player)
+        this.addMessage("You cannot go that way!");
+      return;
+    }
+    else if (this.occupied(nx, ny)) {
+      if (actor instanceof Player)
+        this.addMessage("There's someone in your way!");
+      return;
+    }
+    else if (actor instanceof Player && terrain === Terrain.Goal) {
+      const popup = new Popup("", "You need to return with the stolen egg or risk the wrath of [#b45252 Skittlebix]!", 3, 10, 50);
+      game!.pushPopup(popup);
+      game!.pushInputController(new InfoPopupController(game!));
+    }
+
+    actor.x = nx;
+    actor.y = ny;
+    if (actor instanceof Player && this.items[key]) {
       this.score++;
       this.addMessage(`Picked up an item! (${this.score} total)`);
       delete this.items[key];

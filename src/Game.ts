@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Guard, Adventurer } from "./Actor";
+import { Guard, Adventurer, Barmaid } from "./Actor";
 import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 import { InputController } from "./InputController";
@@ -24,7 +24,7 @@ export class Game {
     const scheduler = new ROT.Scheduler.Simple();
     scheduler.add(state.player, true);
 
-    this.setupVillagers(scheduler, eggLocation);
+    this.setupVillagers(scheduler, state, eggLocation);
 
     scheduler.add({ act: () => { state.turn++; return Promise.resolve(); } }, true);
 
@@ -32,8 +32,8 @@ export class Game {
     this.engine.start();
   }
 
-  private setupVillagers(scheduler: Scheduler, eggLocation: number): void {
-    let guard1 = new Guard(107, 10, "#b8b5b9", "Guard");
+  private setupVillagers(scheduler: Scheduler, state: GameState, eggLocation: number): void {
+    let guard1 = new Guard(107, 10, "#b8b5b9", "Guard", state);
     scheduler.add(guard1, true);
     this.state.villagers.push(guard1);
     
@@ -85,6 +85,10 @@ export class Game {
     ]);
     scheduler.add(adven3, true);
     this.state.villagers.push(adven3);
+
+    let barmaid = new Barmaid(96, 21, "#edc8c4", "Barmaid", state);
+    scheduler.add(barmaid, true);
+    this.state.villagers.push(barmaid);
   }
 
   pushInputController(controller: InputController): void {

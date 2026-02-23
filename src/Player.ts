@@ -1,13 +1,12 @@
-export class Player {
-  x: number;
-  y: number;
+import { Actor } from "./Actor";
+
+export class Player extends Actor {
   health: number;
   readonly maxHealth: number;
   inventory: string[] = [];
 
   constructor(x: number, y: number, maxHealth: number = 3) {
-    this.x = x;
-    this.y = y;
+    super(x, y, "#b45252", "Snerk");
     this.maxHealth = maxHealth;
     this.health = maxHealth;
     this.inventory = [ "rock", "rock", "wasps' nest" ];

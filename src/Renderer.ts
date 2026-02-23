@@ -1,4 +1,5 @@
 import * as ROT from "rot-js";
+import { Adventurer } from "./Actor";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
 
@@ -62,7 +63,10 @@ export class Renderer {
         if (actor.barkText && sy >= 2) {
           const dx = Math.abs(actor.x - state.player.x);
           const dy = Math.abs(actor.y - state.player.y);
-          const bark = Math.max(dx, dy) > 3 ? "*mumble, mumble*" : actor.barkText;
+          const bark = (actor instanceof Adventurer && Math.max(dx, dy) > 3)
+            ? "*mumble, mumble*"
+            : actor.barkText!;
+
           const textStart = Math.max(0, Math.min(vpW - bark.length, sx - Math.floor(bark.length / 2)));
           for (let i = 0; i < bark.length; i++) {
             this.display.draw(textStart + i, sy + this.MAP_Y - 2, bark[i], "#fff", "#333");

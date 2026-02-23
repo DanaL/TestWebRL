@@ -35,7 +35,7 @@ export class PlayerCommandController extends InputController {
     const dir = MOVE_KEYS[e.key];
     if (dir) {
       e.preventDefault();
-      this.game.state.tryMove(dir[0], dir[1], this.game);
+      this.game.state.tryMove(dir[0], dir[1], this.game, this.game.state.player);
       this.game.state.computeFov();
       this.game.state.player.endTurn();
     } else if (e.key == ' ' || e.key == '.') {
