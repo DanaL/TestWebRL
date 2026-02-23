@@ -106,6 +106,39 @@ export class Barmaid extends Actor {
   }
 }
 
+export class Barfly extends Actor {
+  private readonly state: GameState;
+  
+  constructor(x: number, y: number, colour: string, name: string, state: GameState) {
+    super(x, y, colour, name);
+    this.state = state;
+    this.attentionRadius = 3;
+  }
+
+  act(): Promise<void> {
+    let dx = 0;
+    let dy = 0;
+    const dir = Math.floor(ROT.RNG.getUniform() * 4);
+
+    switch (dir) {
+      case 0: dy = -1; break; // north
+      case 1: dy =  1; break; // south
+      case 2: dx =  1; break; // east
+      case 3: dx = -1; break; // west
+    }
+
+    this.facingDx = dx;
+    this.facingDy = dy;
+    this.state.tryMove(dx, dy, null, this);
+    this.attentionCone = this.state.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
+      this.state.addMessage(`The ${this.name} sees you!`);
+    }
+    
+    return Promise.resolve();
+  }
+}
+
 const DIRS_8: [number, number][] = [
   [1, 0], [-1, 0], [0, 1], [0, -1],
   [1, 1], [-1, 1], [1, -1], [-1, -1],
