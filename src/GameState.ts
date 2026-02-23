@@ -22,6 +22,7 @@ export class GameState {
   villagers: Actor[] = [];
   fovRadius = 10;
   score = 0;
+  turn = 0;
   messages: string[] = ["Move with arrow keys or WASD. Walk over * to collect items."];
 
   private fov: ROT.FOV.PreciseShadowcasting;

@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Actor } from "./Actor";
+import { Guard, Adventurer } from "./Actor";
 import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 import { InputController } from "./InputController";
@@ -24,14 +24,20 @@ export class Game {
 
     this.setupVillagers(scheduler);
 
+    scheduler.add({ act: () => { state.turn++; return Promise.resolve(); } }, true);
+
     this.engine = new ROT.Engine(scheduler);
     this.engine.start();
   }
 
   private setupVillagers(scheduler: Scheduler): void {
-    let guard1 = new Actor(107, 10, "Guard");
+    let guard1 = new Guard(107, 10, "#b8b5b9", "Guard");
     scheduler.add(guard1, true);
     this.state.villagers.push(guard1);
+
+    let adven1 = new Adventurer(98, 22, "#cf8acb", "Sorceress");
+    scheduler.add(adven1, true);
+    this.state.villagers.push(adven1);
   }
 
   pushInputController(controller: InputController): void {

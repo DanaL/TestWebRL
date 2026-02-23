@@ -57,7 +57,7 @@ export class Renderer {
       const sx = actor.x - camX;
       const sy = actor.y - camY;
 
-      this.display.draw(sx, sy + this.MAP_Y, "@", "#b8b5b9", null)
+      this.display.draw(sx, sy + this.MAP_Y, "@", actor.colour, null)
     }
 
     this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#b45252", null);
@@ -71,7 +71,7 @@ export class Renderer {
       this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#b45252" : "#500", "#111");
     }
 
-    const rest = `  Score: ${state.score}  ${state.player.y},${state.player.x}`;
+    const rest = `  Score: ${state.score}  Turn: ${state.turn}  ${state.player.y},${state.player.x}`;
     for (let i = 0; i < Math.min(rest.length, this.width - col); i++) {
       this.display.draw(col++, 0, rest[i], "#aaa", "#111");
     }
