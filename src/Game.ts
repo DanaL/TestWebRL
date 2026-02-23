@@ -6,12 +6,6 @@ import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import type Scheduler from "rot-js/lib/scheduler/scheduler";
 
-const EggLocation = {
-  Alchemist: 0,
-  Mayor:  1,
-  Church: 2
-} as const;
-
 export class Game {
   readonly state: GameState;
   readonly renderer: Renderer;
@@ -64,7 +58,7 @@ export class Game {
         break;
     }
 
-    let adven1 = new Adventurer(98, 22, "#cf8acb", "Sorceress", [
+    let adven1 = new Adventurer(97, 23, "#cf8acb", "Sorceress", [
       "My mana is low, but it was worth it.",
       "Another cup of wine, please.",
       "Hmm. Bloodstains on my robe.",
@@ -74,7 +68,7 @@ export class Game {
     scheduler.add(adven1, true);
     this.state.villagers.push(adven1);
 
-    let adven2 = new Adventurer(99, 23, "#45444f", "Rogue", [
+    let adven2 = new Adventurer(98, 24, "#45444f", "Rogue", [
       "I wish the kobolds had more treasure!",
       "There were so many traps.",
       "You guys were too noisy.",
@@ -83,7 +77,7 @@ export class Game {
     scheduler.add(adven2, true);
     this.state.villagers.push(adven2);
 
-    let adven3 = new Adventurer(97, 23, "#c2d368", "Warrior", [
+    let adven3 = new Adventurer(96, 24, "#c2d368", "Warrior", [
       "God, that cave was stinky.",
       "Nothing like good ale after a dungeon crawl!",
       "Maybe I'll by a new sword.",
