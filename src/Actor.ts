@@ -1,5 +1,6 @@
 import * as ROT from "rot-js";
 import type { GameState } from "./GameState";
+import { Terrain } from "./Terrain";
 
 export abstract class Actor {
   x: number;
@@ -72,7 +73,16 @@ export class Barmaid extends Actor {
 
     this.facingDx = dx;
     this.facingDy = dy;
-    this.state.tryMove(dx, dy, null, this);
+
+    // Barmaid won't leave the tavern normally
+    const nx = this.x + dx;
+    const ny = this.y + dy;
+    const terrain = this.state.map[`${nx},${ny}`];
+
+    if (terrain === Terrain.Floor) {
+      this.state.tryMove(dx, dy, null, this);
+    }
+    
     this.attentionCone = this.state.computeAttentionCone(this);
     if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
       this.state.addMessage(`The ${this.name} sees you!`);
@@ -129,7 +139,16 @@ export class Barfly extends Actor {
 
     this.facingDx = dx;
     this.facingDy = dy;
-    this.state.tryMove(dx, dy, null, this);
+
+    // Barfly won't leave the tavern normally
+    const nx = this.x + dx;
+    const ny = this.y + dy;
+    const terrain = this.state.map[`${nx},${ny}`];
+
+    if (terrain === Terrain.Floor) {
+      this.state.tryMove(dx, dy, null, this);
+    }
+
     this.attentionCone = this.state.computeAttentionCone(this);
     if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
       this.state.addMessage(`The ${this.name} sees you!`);
