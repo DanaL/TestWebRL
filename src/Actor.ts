@@ -8,6 +8,10 @@ export abstract class Actor {
   name: string;
   description: string = "";
   barkText: string | null = null;
+  facingDx: number = 1;
+  facingDy: number = 0;
+  attentionRadius: number = 0;
+  attentionCone: Set<string> = new Set();
 
   constructor(x: number, y: number, colour: string, name: string) {
     this.x = x;
@@ -26,11 +30,18 @@ export class Guard extends Actor {
   constructor(x: number, y: number, colour: string, name: string, state: GameState) {
     super(x, y, colour, name);
     this.state = state;
+    this.attentionRadius = 9;
   }
 
   act(): Promise<void> {
+    this.facingDx = this.dir;
+    this.facingDy = 0;
     this.state.tryMove(this.dir, 0, null, this);
     this.dir *= -1;
+    this.attentionCone = this.state.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
+      this.state.addMessage(`The ${this.name} sees you!`);
+    }
     return Promise.resolve();
   }
 }
@@ -43,6 +54,7 @@ export class Barmaid extends Actor {
   constructor(x: number, y: number, colour: string, name: string, state: GameState) {
     super(x, y, colour, name);
     this.state = state;
+    this.attentionRadius = 3;
     this.barkCooldown = 3 + Math.floor(ROT.RNG.getUniform() * 5);
   }
 
@@ -58,7 +70,13 @@ export class Barmaid extends Actor {
       case 3: dx = -1; break; // west
     }
 
+    this.facingDx = dx;
+    this.facingDy = dy;
     this.state.tryMove(dx, dy, null, this);
+    this.attentionCone = this.state.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
+      this.state.addMessage(`The ${this.name} sees you!`);
+    }
 
     if (this.barkDisplayTurns > 0) {
       this.barkDisplayTurns--;
@@ -88,20 +106,36 @@ export class Barmaid extends Actor {
   }
 }
 
+const DIRS_8: [number, number][] = [
+  [1, 0], [-1, 0], [0, 1], [0, -1],
+  [1, 1], [-1, 1], [1, -1], [-1, -1],
+];
+
 export class Adventurer extends Actor {
   private static anyoneBarking = false;
 
   private readonly barks: string[];
   private barkDisplayTurns = 0;
   private barkCooldown: number;
+  private readonly state: GameState;
 
-  constructor(x: number, y: number, colour: string, name: string, barks: string[]) {
+  constructor(x: number, y: number, colour: string, name: string, barks: string[], state: GameState) {
     super(x, y, colour, name);
     this.barks = barks;
+    this.state = state;
+    this.attentionRadius = 2;
     this.barkCooldown = 3 + Math.floor(ROT.RNG.getUniform() * 5);
   }
 
   act(): Promise<void> {
+    const d = DIRS_8[Math.floor(ROT.RNG.getUniform() * 8)];
+    this.facingDx = d[0];
+    this.facingDy = d[1];
+    this.attentionCone = this.state.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
+      this.state.addMessage(`The ${this.name} sees you!`);
+    }
+
     if (this.barkDisplayTurns > 0) {
       this.barkDisplayTurns--;
       if (this.barkDisplayTurns === 0) {

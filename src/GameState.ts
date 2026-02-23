@@ -61,6 +61,33 @@ export class GameState {
     });
   }
 
+  computeAttentionCone(actor: Actor): Set<string> {
+    const cone = new Set<string>();
+    if (actor.attentionRadius <= 0) return cone;
+
+    const HALF_ANGLE_COS = Math.cos(25 * Math.PI / 180);
+    const facingMag = Math.sqrt(actor.facingDx ** 2 + actor.facingDy ** 2);
+
+    const fov = new ROT.FOV.PreciseShadowcasting((x, y) => {
+      const terrain = this.map[`${x},${y}`];
+      return terrain !== undefined && !TERRAIN_DEF[terrain].opaque;
+    });
+
+    fov.compute(actor.x, actor.y, actor.attentionRadius, (x, y, _r, visibility) => {
+      if (!visibility) return;
+      const dx = x - actor.x;
+      const dy = y - actor.y;
+      if (dx === 0 && dy === 0) return;
+      const dot = dx * actor.facingDx + dy * actor.facingDy;
+      const mag = Math.sqrt(dx * dx + dy * dy) * facingMag;
+      if (dot / mag >= HALF_ANGLE_COS) {
+        cone.add(`${x},${y}`);
+      }
+    });
+
+    return cone;
+  }
+
   addMessage(msg: string): void {
     this.messages.unshift(msg);
     if (this.messages.length > 3) this.messages.length = 3;

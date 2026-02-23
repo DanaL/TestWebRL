@@ -60,12 +60,11 @@ export class Game {
     }
 
     let adven1 = new Adventurer(97, 23, "#cf8acb", "Sorceress", [
-
       "My mana is low, but it was worth it.",
       "Another cup of wine, please.",
       "Hmm. Bloodstains on my robe.",
       b1
-    ]);
+    ], state);
     
     adven1.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven1, true);
@@ -76,7 +75,7 @@ export class Game {
       "There were so many traps.",
       "You guys were too noisy.",
       b2
-    ]);
+    ], state);
     adven2.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven2, true);
     this.state.villagers.push(adven2);
@@ -86,7 +85,7 @@ export class Game {
       "Nothing like good ale after a dungeon crawl!",
       "Maybe I'll by a new sword.",
       b3
-    ]);
+    ], state);
     adven3.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven3, true);
     this.state.villagers.push(adven3);

@@ -60,6 +60,25 @@ export class Renderer {
     }
 
     for (const actor of state.villagers) {
+      if (!state.visible[`${actor.x},${actor.y}`]) 
+        continue;
+
+      for (const key of actor.attentionCone) {
+        if (!state.visible[key]) continue;
+        const [wx, wy] = key.split(",").map(Number);
+        const sx = wx - camX;
+        const sy = wy - camY;
+        if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH) continue;
+        const terrain = state.map[key];
+        if (terrain === undefined) continue;
+        const def = TERRAIN_DEF[terrain];
+        const ch = state.items[key] ?? def.glyph;
+        const fg = state.items[key] ? "#ede19e" : def.fg;
+        this.display.draw(sx, sy + this.MAP_Y, ch, fg, "#2a1515");
+      }
+    }
+
+    for (const actor of state.villagers) {
       if (state.visible[`${actor.x},${actor.y}`]) {
         const sx = actor.x - camX;
         const sy = actor.y - camY;
