@@ -38,6 +38,10 @@ export class PlayerCommandController extends InputController {
       this.game.state.tryMove(dir[0], dir[1], this.game);
       this.game.state.computeFov();
       this.game.state.player.endTurn();
+    } else if (e.key == ' ' || e.key == '.') {
+      // A pass action
+      this.game.state.computeFov();
+      this.game.state.player.endTurn();
     }
   }
 }
