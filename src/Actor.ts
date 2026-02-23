@@ -1,8 +1,11 @@
+import * as ROT from "rot-js";
+
 export abstract class Actor {
   x: number;
   y: number;
   colour: string;
   name: string;
+  barkText: string | null = null;
 
   constructor(x: number, y: number, colour: string, name: string) {
     this.x = x;
@@ -25,7 +28,38 @@ export class Guard extends Actor {
 }
 
 export class Adventurer extends Actor {
+  private static anyoneBarking = false;
+
+  private readonly barks: string[];
+  private barkDisplayTurns = 0;
+  private barkCooldown: number;
+
+  constructor(x: number, y: number, colour: string, name: string, barks: string[]) {
+    super(x, y, colour, name);
+    this.barks = barks;
+    this.barkCooldown = 3 + Math.floor(ROT.RNG.getUniform() * 5);
+  }
+
   act(): Promise<void> {
+    if (this.barkDisplayTurns > 0) {
+      this.barkDisplayTurns--;
+      if (this.barkDisplayTurns === 0) {
+        this.barkText = null;
+        Adventurer.anyoneBarking = false;
+        this.barkCooldown = 4 + Math.floor(ROT.RNG.getUniform() * 6);
+      }
+    } else if (this.barkCooldown > 0) {
+      this.barkCooldown--;
+      if (this.barkCooldown === 0) {
+        if (!Adventurer.anyoneBarking) {
+          this.barkText = this.barks[Math.floor(ROT.RNG.getUniform() * this.barks.length)];
+          this.barkDisplayTurns = 3;
+          Adventurer.anyoneBarking = true;
+        } else {
+          this.barkCooldown = 1 + Math.floor(ROT.RNG.getUniform() * 3);
+        }
+      }
+    }
     return Promise.resolve();
   }
 }

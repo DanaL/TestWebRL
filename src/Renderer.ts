@@ -54,10 +54,22 @@ export class Renderer {
     }
 
     for (const actor of state.villagers) {
-      const sx = actor.x - camX;
-      const sy = actor.y - camY;
+      if (state.visible[`${actor.x},${actor.y}`]) {
+        const sx = actor.x - camX;
+        const sy = actor.y - camY;
+        this.display.draw(sx, sy + this.MAP_Y, "@", actor.colour, null);
 
-      this.display.draw(sx, sy + this.MAP_Y, "@", actor.colour, null)
+        if (actor.barkText && sy >= 2) {
+          const bark = actor.barkText;
+          const textStart = Math.max(0, Math.min(vpW - bark.length, sx - Math.floor(bark.length / 2)));
+          for (let i = 0; i < bark.length; i++) {
+            this.display.draw(textStart + i, sy + this.MAP_Y - 2, bark[i], "#fff", "#333");
+          }
+          if (sx > 0) {
+            this.display.draw(sx - 1, sy + this.MAP_Y - 1, "\\", "#aaa", "#333");
+          }
+        }
+      }
     }
 
     this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#b45252", null);
