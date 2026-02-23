@@ -39,7 +39,8 @@ export class Renderer {
       const [wx, wy] = key.split(",").map(Number);
       const sx = wx - camX;
       const sy = wy - camY;
-      if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH) continue;
+      if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH) 
+        continue;
 
       if (state.visible[key]) {
         const def = TERRAIN_DEF[state.map[key]];
@@ -50,6 +51,13 @@ export class Renderer {
         const def = TERRAIN_DEF[state.map[key]];
         this.display.draw(sx, sy + this.MAP_Y, def.glyph, "#222", null);
       }
+    }
+
+    for (const actor of state.villagers) {
+      const sx = actor.x - camX;
+      const sy = actor.y - camY;
+
+      this.display.draw(sx, sy + this.MAP_Y, "@", "#b8b5b9", null)
     }
 
     this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#b45252", null);

@@ -1,7 +1,10 @@
+import * as ROT from "rot-js";
+import { Actor } from "./Actor";
 import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 import { InputController } from "./InputController";
 import { Popup } from "./Popup";
+import type Scheduler from "rot-js/lib/scheduler/scheduler";
 
 export class Game {
   readonly state: GameState;
@@ -10,10 +13,25 @@ export class Game {
   private controllerStack: InputController[] = [];
   private popupStack: Popup[] = [];
   private inputQueue: KeyboardEvent[] = [];
+  private engine: ROT.Engine;
 
   constructor(state: GameState, renderer: Renderer) {
     this.state = state;
     this.renderer = renderer;
+
+    const scheduler = new ROT.Scheduler.Simple();
+    scheduler.add(state.player, true);
+
+    this.setupVillagers(scheduler);
+
+    this.engine = new ROT.Engine(scheduler);
+    this.engine.start();
+  }
+
+  private setupVillagers(scheduler: Scheduler): void {
+    let guard1 = new Actor(107, 10, "Guard");
+    scheduler.add(guard1, true);
+    this.state.villagers.push(guard1);
   }
 
   pushInputController(controller: InputController): void {

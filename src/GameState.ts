@@ -1,4 +1,5 @@
 import * as ROT from "rot-js";
+import { Actor } from "./Actor";
 import { Player } from "./Player";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
@@ -18,6 +19,7 @@ export class GameState {
   explored: Record<string, boolean> = {};
 
   player!: Player;
+  villagers: Actor[] = [];
   fovRadius = 10;
   score = 0;
   messages: string[] = ["Move with arrow keys or WASD. Walk over * to collect items."];

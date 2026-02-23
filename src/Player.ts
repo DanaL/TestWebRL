@@ -24,4 +24,17 @@ export class Player {
   heal(amount: number): void {
     this.health = Math.min(this.maxHealth, this.health + amount);
   }
+
+  private _endTurn: (() => void) | null = null;
+
+  act(): Promise<void> {
+    return new Promise(resolve => {
+      this._endTurn = resolve;
+    });
+  }
+
+  endTurn(): void {
+    this._endTurn?.();
+    this._endTurn = null;
+  }
 }
