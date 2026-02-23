@@ -6,6 +6,7 @@ export abstract class Actor {
   y: number;
   colour: string;
   name: string;
+  description: string = "";
   barkText: string | null = null;
 
   constructor(x: number, y: number, colour: string, name: string) {

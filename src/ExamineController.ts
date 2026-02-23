@@ -1,0 +1,78 @@
+import { InputController } from "./InputController";
+import { Game } from "./Game";
+import type { Actor } from "./Actor";
+import { Popup } from "./Popup";
+
+export class ExamineController extends InputController {
+  private game: Game;
+  private targets: Actor[];
+  private index: number;
+
+  constructor(game: Game, targets: Actor[]) {
+    super();
+    this.game = game;
+    this.targets = targets;
+    this.index = -1;
+    game.pushPopup(this.makeInstructionsPopup());
+  }
+
+  private makeInstructionsPopup(): Popup {  
+    return new Popup(
+      "Examine",
+      "Information about interesting objects in the game. [#68c2d3 Tab] through items. [#68c2d3 Esc] to exit.",
+      3, 3, 40
+    );
+  }
+
+  private makePopup(): Popup {
+    const actor = this.targets[this.index];
+    const text = actor.description || "No description available.";
+    const MAX_WIDTH = 40;
+    const popupH = this.calcPopupHeight(text, MAX_WIDTH);
+    const { camY } = this.game.renderer.cameraFor(this.game.state);
+    const sy = actor.y - camY;
+    const MAP_Y = this.game.renderer.MAP_Y;
+    
+    const popupRow = sy >= popupH ? sy + MAP_Y - popupH : sy + MAP_Y + 1;
+    return new Popup(`[#cf8acb ${actor.name}]`, text, popupRow, 3, MAX_WIDTH);
+  }
+
+  private calcPopupHeight(text: string, maxWidth: number): number {
+    let lines = 1;
+    let lineLen = 0;
+    for (const segment of text.split('\n')) {
+      if (lineLen > 0) { lines++; lineLen = 0; }
+      for (const word of segment.split(' ')) {
+        if (word === '') continue;
+        const needed = lineLen > 0 ? word.length + 1 : word.length;
+        if (lineLen > 0 && needed + lineLen > maxWidth) {
+          lines++;
+          lineLen = word.length;
+        } else {
+          lineLen += needed;
+        }
+      }
+    }
+
+    // top + title + blank + lines + trailing blank + bottom
+    return lines + 5;
+  }
+
+  handleInput(e: KeyboardEvent): void {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      this.game.popPopup();
+      if (this.index === -1) {
+        this.index = 0;      
+      } else {
+        this.index = (this.index + 1) % this.targets.length;
+      }
+      this.game.state.examinedActor = this.targets[this.index];
+      this.game.pushPopup(this.makePopup());
+    } else if (e.key === "Escape") {
+      this.game.popPopup();
+      this.game.popInputController();
+      this.game.state.examinedActor = null;
+    }
+  }
+}

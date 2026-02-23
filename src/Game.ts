@@ -34,6 +34,7 @@ export class Game {
 
   private setupVillagers(scheduler: Scheduler, state: GameState, eggLocation: number): void {
     let guard1 = new Guard(107, 10, "#b8b5b9", "Guard", state);
+    guard1.description = "A stinky human who's carrying a sword.";
     scheduler.add(guard1, true);
     this.state.villagers.push(guard1);
     
@@ -59,12 +60,14 @@ export class Game {
     }
 
     let adven1 = new Adventurer(97, 23, "#cf8acb", "Sorceress", [
+
       "My mana is low, but it was worth it.",
       "Another cup of wine, please.",
       "Hmm. Bloodstains on my robe.",
       b1
     ]);
     
+    adven1.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven1, true);
     this.state.villagers.push(adven1);
 
@@ -74,6 +77,7 @@ export class Game {
       "You guys were too noisy.",
       b2
     ]);
+    adven2.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven2, true);
     this.state.villagers.push(adven2);
 
@@ -83,10 +87,12 @@ export class Game {
       "Maybe I'll by a new sword.",
       b3
     ]);
+    adven3.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven3, true);
     this.state.villagers.push(adven3);
 
     let barmaid = new Barmaid(96, 21, "#edc8c4", "Barmaid", state);
+    barmaid.description = "A stinky human carrying a tray of mugs.";
     scheduler.add(barmaid, true);
     this.state.villagers.push(barmaid);
   }

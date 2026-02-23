@@ -18,7 +18,7 @@ export class Renderer {
     return this.display.getContainer()!;
   }
 
-  private readonly MAP_Y = 1; // row 0 is the status bar
+  readonly MAP_Y = 1; // row 0 is the status bar
 
   drawChar(row: number, col: number, ch: string, fg: string, bg: string): void {
     this.display.draw(col, row, ch, fg, bg);
@@ -28,13 +28,18 @@ export class Renderer {
     this.display.draw(col, row, txt, fg, bg);
   }
 
+  cameraFor(state: GameState): { camX: number, camY: number, vpW: number, vpH: number } {
+    const vpW = this.width;
+    const vpH = this.height - this.MAP_Y - 3;
+    const camX = Math.max(0, Math.min(state.width  - vpW, state.player.x - Math.floor(vpW / 2)));
+    const camY = Math.max(0, Math.min(state.height - vpH, state.player.y - Math.floor(vpH / 2)));
+    return { camX, camY, vpW, vpH };
+  }
+
   drawGameArea(state: GameState): void {
     this.display.clear();
 
-    const vpW = this.width;
-    const vpH = this.height - this.MAP_Y - 3; // minus status bar and 3 message rows
-    const camX = Math.max(0, Math.min(state.width  - vpW, state.player.x - Math.floor(vpW / 2)));
-    const camY = Math.max(0, Math.min(state.height - vpH, state.player.y - Math.floor(vpH / 2)));
+    const { camX, camY, vpW, vpH } = this.cameraFor(state);
 
     for (const key in state.map) {
       const [wx, wy] = key.split(",").map(Number);
@@ -58,7 +63,9 @@ export class Renderer {
       if (state.visible[`${actor.x},${actor.y}`]) {
         const sx = actor.x - camX;
         const sy = actor.y - camY;
-        this.display.draw(sx, sy + this.MAP_Y, "@", actor.colour, null);
+        const fg = state.examinedActor === actor ? "#000" : actor.colour;
+        const bg = state.examinedActor === actor ? "#cf8acb" : null;
+        this.display.draw(sx, sy + this.MAP_Y, "@", fg, bg);
 
         if (actor.barkText && sy >= 2) {
           const dx = Math.abs(actor.x - state.player.x);

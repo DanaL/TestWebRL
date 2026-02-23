@@ -20,6 +20,7 @@ export class GameState {
 
   player!: Player;
   villagers: Actor[] = [];
+  examinedActor: Actor | null = null;
   fovRadius = 10;
   score = 0;
   turn = 0;
