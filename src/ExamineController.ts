@@ -1,14 +1,16 @@
 import { InputController } from "./InputController";
 import { Game } from "./Game";
-import type { Actor } from "./Actor";
+import { Actor } from "./Actor";
 import { Popup } from "./Popup";
+
+type Examinable = { x: number; y: number; name: string; description: string };
 
 export class ExamineController extends InputController {
   private game: Game;
-  private targets: Actor[];
+  private targets: Examinable[];
   private index: number;
 
-  constructor(game: Game, targets: Actor[]) {
+  constructor(game: Game, targets: Examinable[]) {
     super();
     this.game = game;
     this.targets = targets;
@@ -67,7 +69,8 @@ export class ExamineController extends InputController {
       } else {
         this.index = (this.index + 1) % this.targets.length;
       }
-      this.game.state.examinedActor = this.targets[this.index];
+      const target = this.targets[this.index];
+      this.game.state.examinedActor = target instanceof Actor ? target : null;
       this.game.pushPopup(this.makePopup());
     } else if (e.key === "Escape") {
       this.game.popPopup();

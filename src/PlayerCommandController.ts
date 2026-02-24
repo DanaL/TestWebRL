@@ -19,14 +19,14 @@ export class PlayerCommandController extends InputController {
 
   handleInput(e: KeyboardEvent): void {
     if (e.key === "x") {
-      const targets = this.game.state.villagers.filter(
-        a => this.game.state.visible[`${a.x},${a.y}`]
-      );
+      const { state } = this.game;
+      const actors = state.villagers.filter(a => state.visible[`${a.x},${a.y}`]);
+      const items = Object.values(state.items).filter(i => state.visible[`${i.x},${i.y}`]);
+      const targets = [...actors, ...items];
       if (targets.length > 0) {
         this.game.pushInputController(new ExamineController(this.game, targets));
-      }
-      else {
-        this.game.state.addMessage("There is nothing interesting to examine.")
+      } else {
+        state.addMessage("There is nothing interesting to examine.");
       }
       return;
     }
