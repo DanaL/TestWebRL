@@ -21,7 +21,7 @@ export class GameState {
 
   player!: Player;
   villagers: Actor[] = [];
-  examinedActor: Actor | null = null;
+  examinedLoc: string = "";
   fovRadius = 10;
   turn = 0;
   messages: string[] = ["Move with arrow keys or WASD. 'x' to Examine."];

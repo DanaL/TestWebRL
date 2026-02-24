@@ -70,12 +70,12 @@ export class ExamineController extends InputController {
         this.index = (this.index + 1) % this.targets.length;
       }
       const target = this.targets[this.index];
-      this.game.state.examinedActor = target instanceof Actor ? target : null;
+      this.game.state.examinedLoc = `${target.x},${target.y}`;
       this.game.pushPopup(this.makePopup());
     } else if (e.key === "Escape") {
       this.game.popPopup();
       this.game.popInputController();
-      this.game.state.examinedActor = null;
+      this.game.state.examinedLoc = "";
     }
   }
 }
