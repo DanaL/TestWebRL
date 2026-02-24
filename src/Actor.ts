@@ -29,6 +29,16 @@ export abstract class Actor {
   attentionCone: Set<string> = new Set();
   state: ActorState = ActorState.Idle;
 
+  fearX: number = 0;
+  fearY: number = 0;
+  fearTurnsLeft: number = 0;
+  fleePhase: "flee" | "return" = "flee";
+  fleeTargetX: number = 0;
+  fleeTargetY: number = 0;
+  fleeReturnX: number = 0;
+  fleeReturnY: number = 0;
+  prevStateBeforeFear: ActorState = ActorState.Idle;
+
   constructor(x: number, y: number, colour: string, name: string) {
     this.x = x;
     this.y = y;
@@ -38,8 +48,83 @@ export abstract class Actor {
 
   abstract act(): Promise<void>;
 
-  // Override in subclasses that react to nearby sounds.
   hearNoise(_x: number, _y: number): void {}
+
+  becomeAfraid(fearX: number, fearY: number, gs: GameState): void {
+    if (this.state === ActorState.Afraid) 
+      return;
+
+    gs.addMessage(`The ${this.name} becomes frightened!`);
+    this.prevStateBeforeFear = this.state;
+    this.fleeReturnX = this.x;
+    this.fleeReturnY = this.y;
+    this.fearX = fearX;
+    this.fearY = fearY;
+    this.fearTurnsLeft = 50 + Math.floor(ROT.RNG.getUniform() * 6);
+    this.fleePhase = "flee";
+    // Project a flee target 20 tiles away in the direction opposite to the fear source
+    const awayDx = this.x - fearX;
+    const awayDy = this.y - fearY;
+    const mag = Math.sqrt(awayDx ** 2 + awayDy ** 2);
+    if (mag > 0) {
+      this.fleeTargetX = Math.round(this.x + (awayDx / mag) * 20);
+      this.fleeTargetY = Math.round(this.y + (awayDy / mag) * 20);
+    } else {
+      this.fleeTargetX = this.x + 20;
+      this.fleeTargetY = this.y;
+    }
+    this.fleeTargetX = Math.max(0, Math.min(gs.width - 1, this.fleeTargetX));
+    this.fleeTargetY = Math.max(0, Math.min(gs.height - 1, this.fleeTargetY));
+    this.state = ActorState.Afraid;
+  }
+
+  protected actAfraid(gs: GameState): void {
+    this.fearTurnsLeft--;
+
+    if (this.fleePhase === "flee") {
+      if (this.fearTurnsLeft <= 0) {
+        this.fleePhase = "return";
+      } else {
+        const astar = new ROT.Path.AStar(this.fleeTargetX, this.fleeTargetY, (x, y) => {
+          const t = gs.map[`${x},${y}`];
+          return t !== undefined && TERRAIN_DEF[t].walkable;
+        }, { topology: 4 });
+        let step = 0, nextX = this.x, nextY = this.y;
+        astar.compute(this.x, this.y, (x, y) => {
+          if (step === 1) { nextX = x; nextY = y; }
+          step++;
+        });
+        const dx = nextX - this.x, dy = nextY - this.y;
+        if (dx !== 0 || dy !== 0) {
+          this.facingDx = dx;
+          this.facingDy = dy;
+          gs.tryMove(dx, dy, null, this);
+        }
+      }
+    }
+
+    if (this.fleePhase === "return") {
+      if (distance(this.x, this.y, this.fleeReturnX, this.fleeReturnY) === 0) {
+        this.state = this.prevStateBeforeFear;
+        return;
+      }
+      const astar = new ROT.Path.AStar(this.fleeReturnX, this.fleeReturnY, (x, y) => {
+        const t = gs.map[`${x},${y}`];
+        return t !== undefined && TERRAIN_DEF[t].walkable;
+      }, { topology: 4 });
+      let step = 0, nextX = this.x, nextY = this.y;
+      astar.compute(this.x, this.y, (x, y) => {
+        if (step === 1) { nextX = x; nextY = y; }
+        step++;
+      });
+      const dx = nextX - this.x, dy = nextY - this.y;
+      if (dx !== 0 || dy !== 0) {
+        this.facingDx = dx;
+        this.facingDy = dy;
+        gs.tryMove(dx, dy, null, this);
+      }
+    }
+  }
 }
 
 export class Guard extends Actor {
@@ -64,7 +149,7 @@ export class Guard extends Actor {
   }
 
   override hearNoise(x: number, y: number): void {
-    if (this.state === ActorState.Investigating) 
+    if (this.state === ActorState.Investigating || this.state === ActorState.Afraid)
       return;
     this.prevState = this.state;
     this.returnX = this.x;
@@ -115,6 +200,10 @@ export class Guard extends Actor {
           this.rotDir *= -1;
         }
         [this.facingDx, this.facingDy] = this.rotatedFacing(this.rotDir * 20);
+        break;
+      }
+      case ActorState.Afraid: {
+        this.actAfraid(this.gs);
         break;
       }
       case ActorState.Investigating: {
@@ -182,6 +271,12 @@ export class Barmaid extends Actor {
   }
 
   act(): Promise<void> {
+    if (this.state === ActorState.Afraid) {
+      this.actAfraid(this.gs);
+      this.attentionCone = this.gs.computeAttentionCone(this);
+      return Promise.resolve();
+    }
+
     let dx = 0;
     let dy = 0;
     const dir = Math.floor(ROT.RNG.getUniform() * 4);
@@ -248,6 +343,12 @@ export class Barfly extends Actor {
   }
 
   act(): Promise<void> {
+    if (this.state === ActorState.Afraid) {
+      this.actAfraid(this.gs);
+      this.attentionCone = this.gs.computeAttentionCone(this);
+      return Promise.resolve();
+    }
+
     let dx = 0;
     let dy = 0;
     const dir = Math.floor(ROT.RNG.getUniform() * 4);
@@ -297,6 +398,12 @@ export class Adventurer extends Actor {
   }
 
   act(): Promise<void> {
+    if (this.state === ActorState.Afraid) {
+      this.actAfraid(this.gs);
+      this.attentionCone = this.gs.computeAttentionCone(this);
+      return Promise.resolve();
+    }
+
     const d = adj8[Math.floor(ROT.RNG.getUniform() * 8)];
     this.facingDx = d[0];
     this.facingDy = d[1];
@@ -370,9 +477,8 @@ export class Wasp extends Actor {
         return;
 
       for (let actor of this.gs.villagers) {
-        if (actor.name !== "wasp" && actor.state !== ActorState.Afraid && actor.x == x && actor.y == y) {
-          actor.state = ActorState.Afraid;
-          this.gs.addMessage(`The ${actor.name} becomes frightened!`);
+        if (actor.name !== "wasp" && actor.x == x && actor.y == y) {
+          actor.becomeAfraid(this.x, this.y, this.gs);          
         }
       }
     });
