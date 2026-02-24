@@ -21,7 +21,7 @@ export class Game {
     this.renderer = renderer;
 
     let eggLocation = Math.floor(ROT.RNG.getUniform() * 3);
-
+    eggLocation = 1;
     const scheduler = new ROT.Scheduler.Simple();
     scheduler.add(state.player, true);
 
@@ -56,7 +56,7 @@ export class Game {
     state.items[`${x},${y}`] = egg;
   }
 
-  private setupVillagers(scheduler: Scheduler, gs: GameState, eggLocation: number): void {
+  private setupVillagers(scheduler: Scheduler, gs: GameState, eggLocation: number): void {    
     const patrolPath: [number, number][] = [
       [107, 10], [135, 10], [135, 11], [140, 11], [140, 12], [141, 12],
       [141, 24], [132, 24], [132, 25], [131, 25], [131, 26], [123, 26],
@@ -80,6 +80,13 @@ export class Game {
     guard3.facingDy = -1;
     scheduler.add(guard3, true);
     this.state.villagers.push(guard3);
+
+    let guard4 = new Guard(182, 26, "#b8b5b9", "Guard", ActorState.Guarding, gs);
+    guard4.description = "A stinky human with a guisarme.";
+    guard4.facingDx = -1;
+    guard4.facingDy = -1;
+    scheduler.add(guard4, true);
+    this.state.villagers.push(guard4);
 
     let b1 = ""; 
     let b2 = ""; 
