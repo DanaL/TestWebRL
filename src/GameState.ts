@@ -100,6 +100,19 @@ export class GameState {
     return false;
   }
 
+  private checkForWin(game: Game | null): void {
+    if (this.player.inventory.filter(i => i.name === "dragon egg").length > 0) {
+      const popup = new Popup("[#cf8acb VICTORY!!]", `You have succeeded in retrieving [#b45252 Skittlebix]'s stolen egg!!\n\nSurely you will be praised as a brave and clever kobold, and won't be eaten by your dragon overlord.\n\nYou retrieved the egg in ${this.turn} turns.`, 3, 10, 50);
+      game!.pushPopup(popup);
+      game!.pushInputController(new InfoPopupController(game!));
+    }
+    else {
+      const popup = new Popup("", "You need to return with the stolen egg or risk the wrath of [#b45252 Skittlebix]!", 3, 10, 50);
+      game!.pushPopup(popup);
+      game!.pushInputController(new InfoPopupController(game!));
+    }
+  }
+
   tryMove(dx: number, dy: number, game: Game | null, actor: Actor): void {
     const nx = actor.x + dx;
     const ny = actor.y + dy;
@@ -117,9 +130,7 @@ export class GameState {
       return;
     }
     else if (actor instanceof Player && terrain === Terrain.Goal) {
-      const popup = new Popup("", "You need to return with the stolen egg or risk the wrath of [#b45252 Skittlebix]!", 3, 10, 50);
-      game!.pushPopup(popup);
-      game!.pushInputController(new InfoPopupController(game!));
+      this.checkForWin(game);
     }
 
     actor.x = nx;
