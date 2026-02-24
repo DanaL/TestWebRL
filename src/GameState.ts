@@ -147,7 +147,7 @@ export class GameState {
   }
 
   async throwItem(item: Item, targetX: number, targetY: number): Promise<void> {
-    const FRAME_MS = 80;
+    const FRAME_MS = 50;
     let path: [number, number][] = [];
     for (const loc of bresenham(this.player.x, this.player.y, targetX, targetY).slice(1)) {
       path.push(loc);
