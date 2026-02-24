@@ -22,9 +22,8 @@ export class GameState {
   villagers: Actor[] = [];
   examinedActor: Actor | null = null;
   fovRadius = 10;
-  score = 0;
   turn = 0;
-  messages: string[] = ["Move with arrow keys or WASD. Walk over * to collect items."];
+  messages: string[] = ["Move with arrow keys or WASD. 'x' to Examine."];
 
   private fov: ROT.FOV.PreciseShadowcasting;
 
@@ -36,11 +35,6 @@ export class GameState {
     this.freeCells = loaded.freeCells;
 
     this.player = new Player(6, 48);
-
-    for (let i = 0; i < 10; i++) {
-      const key = this.freeCells[Math.floor(ROT.RNG.getUniform() * this.freeCells.length)];
-      this.items[key] = "*";
-    }
 
     this.fov = new ROT.FOV.PreciseShadowcasting((x, y) => {
       if (x === this.player.x && y === this.player.y) 
@@ -130,8 +124,7 @@ export class GameState {
     actor.x = nx;
     actor.y = ny;
     if (actor instanceof Player && this.items[key]) {
-      this.score++;
-      this.addMessage(`Picked up an item! (${this.score} total)`);
+      this.addMessage(`Picked up an item!`);
       delete this.items[key];
     }
   }
