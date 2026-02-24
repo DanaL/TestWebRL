@@ -145,4 +145,11 @@ export class GameState {
       delete this.items[key];
     }
   }
+
+  throwItem(item: Item, x: number, y: number): void {
+    const loc = `${x},${y}`;
+    item.x = x;
+    item.y = y;
+    this.items[loc] = item;
+  }
 }

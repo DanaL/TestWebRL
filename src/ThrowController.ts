@@ -3,13 +3,8 @@ import { Game } from "./Game";
 import { Item } from "./Item";
 import { InventoryMenu } from "./Inventory";
 import { Popup } from "./Popup";
-import { distance } from "./Utils";
-import { TERRAIN_DEF } from "./Terrain";
-
-const MOVE_KEYS: Record<string, [number, number]> = {
-  ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
-  w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0],
-};
+import { distance, MOVE_KEYS } from "./Utils";
+import { Terrain, TERRAIN_DEF } from "./Terrain";
 
 export class ThrowMenuController extends InputController {
   private game: Game;
@@ -67,9 +62,13 @@ export class ThrowTargetController extends InputController {
       return false;
 
     const terrain = this.game.state.map[`${nx},${ny}`];
-    if (terrain === undefined || !TERRAIN_DEF[terrain].walkable)
+    if (terrain === Terrain.Water) {
+      return true;
+    }
+    else if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
       return false;
-
+    }
+    
     return true;
   }
 
@@ -78,7 +77,7 @@ export class ThrowTargetController extends InputController {
       this.game.popPopup();
       this.popupOpen = false;
     }
-    
+
     const dir = MOVE_KEYS[e.key];
 
     if (dir) {
@@ -96,7 +95,10 @@ export class ThrowTargetController extends InputController {
       this.game.popPopup();
       this.game.state.throwTarget = null;
       this.game.popInputController();
-      // TODO: implement actual throw mechanics
+
+      let inv = this.game.state.player.inventory;
+      this.game.state.player.inventory = inv.filter(i => i !== this.item);
+      this.game.state.throwItem(this.item, this.tx, this.ty);
       this.game.state.addMessage(`You throw the ${this.item.name}.`);
     } else if (e.key === 'Escape') {
       this.game.popPopup();
