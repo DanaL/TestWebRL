@@ -8,6 +8,7 @@ const ActorState = {
   Angry: "Angry",
   Patrolling: "Patrolling",
   Guarding: "Guarding",
+  Investigating: "Investigating"
 } as const;
 type ActorState = typeof ActorState[keyof typeof ActorState];
 

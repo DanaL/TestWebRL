@@ -41,7 +41,7 @@ export class ThrowTargetController extends InputController {
   private tx: number;
   private ty: number;
   private popupOpen: boolean = true;
-  private readonly MAX_RANGE = 10;
+  private readonly MAX_RANGE = 15;
 
   constructor(game: Game, item: Item) {
     super();

@@ -87,6 +87,39 @@ export class GameState {
     return cone;
   }
 
+  floodFill(startX: number, startY: number, radius: number): Set<string> {
+    const reachable = new Set<string>();
+    const visited = new Set<string>();
+    const queue: [number, number, number][] = [[startX, startY, 0]];
+    visited.add(`${startX},${startY}`);
+
+    while (queue.length > 0) {
+      const [x, y, dist] = queue.shift()!;
+      reachable.add(`${x},${y}`);
+      if (dist >= radius) 
+        continue;
+
+      for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]] as const) {
+        const nx = x + dx;
+        const ny = y + dy;
+        const key = `${nx},${ny}`;
+        if (visited.has(key)) 
+          continue;
+        visited.add(key);
+        const terrain = this.map[key];
+
+        // Doors are passable but will block sound
+        if (terrain === undefined || terrain === Terrain.Door) 
+          continue;
+        if (TERRAIN_DEF[terrain].walkable || terrain === Terrain.Water) {
+          queue.push([nx, ny, dist + 1]);
+        }
+      }
+    }
+
+    return reachable;
+  }
+
   addMessage(msg: string): void {
     this.messages.unshift(msg);
     if (this.messages.length > 3) this.messages.length = 3;
@@ -171,6 +204,22 @@ export class GameState {
       item.x = targetX;
       item.y = targetY;
       this.items[loc] = item;
+      
+      if (item.name == "rock") {
+        this.handleNoise(targetX, targetY, 20);
+      }
     }    
+  }
+
+  private handleNoise(x: number, y: number, radius: number): void {
+    for (const loc of this.floodFill(x, y, radius)) {
+      const [nx, ny] = loc.split(",").map(Number);
+
+      for (let mob of this.villagers) {
+        if (mob.x == nx && mob.y == ny) {
+          this.addMessage(`The ${mob.name} is alerted!`);
+        }
+      }
+    }
   }
 }
