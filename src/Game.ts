@@ -163,7 +163,7 @@ export class Game {
   }
 
   get isAnimating(): boolean {
-    return false; // stub — set to true while animations are playing
+    return this.state.isAnimating;
   }
 
   update(_deltaMs: number): void {

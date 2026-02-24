@@ -133,6 +133,15 @@ export class Renderer {
       }
     }
 
+    if (state.thrownItem) {
+      const { item, x, y } = state.thrownItem;
+      const sx = x - camX;
+      const sy = y - camY;
+      if (sx >= 0 && sx < vpW && sy >= 0 && sy < vpH) {
+        this.display.draw(sx, sy + this.MAP_Y, item.ch, item.colour, null);
+      }
+    }
+
     this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#b45252", null);
   }
 

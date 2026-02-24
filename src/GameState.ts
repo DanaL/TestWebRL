@@ -8,6 +8,7 @@ import { Item } from "./Item";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { loadMap } from "./MapLoader";
+import { bresenham } from "./Utils";
 
 export class GameState {
   readonly width: number;
@@ -23,6 +24,8 @@ export class GameState {
   villagers: Actor[] = [];
   examinedLoc: string = "";
   throwTarget: { x: number; y: number } | null = null;
+  thrownItem: { item: Item; x: number; y: number } | null = null;
+  isAnimating: boolean = false;
   fovRadius = 10;
   turn = 0;
   messages: string[] = ["Move with arrow keys or WASD. 'x' to Examine."];
@@ -106,8 +109,7 @@ export class GameState {
       const popup = new Popup("[#cf8acb VICTORY!!]", `You have succeeded in retrieving [#b45252 Skittlebix]'s stolen egg!!\n\nSurely you will be praised as a brave and clever kobold, and won't be eaten by your dragon overlord.\n\nYou retrieved the egg in ${this.turn} turns.`, 3, 10, 50);
       game!.pushPopup(popup);
       game!.pushInputController(new InfoPopupController(game!));
-    }
-    else {
+    } else {
       const popup = new Popup("", "You need to return with the stolen egg or risk the wrath of [#b45252 Skittlebix]!", 3, 10, 50);
       game!.pushPopup(popup);
       game!.pushInputController(new InfoPopupController(game!));
@@ -124,13 +126,11 @@ export class GameState {
       if (actor instanceof Player)
         this.addMessage("You cannot go that way!");
       return;
-    }
-    else if (this.occupied(nx, ny)) {
+    } else if (this.occupied(nx, ny)) {
       if (actor instanceof Player)
         this.addMessage("There's someone in your way!");
       return;
-    }
-    else if (actor instanceof Player && terrain === Terrain.Goal) {
+    } else if (actor instanceof Player && terrain === Terrain.Goal) {
       this.checkForWin(game);
     }
 
@@ -146,10 +146,25 @@ export class GameState {
     }
   }
 
-  throwItem(item: Item, x: number, y: number): void {
-    const loc = `${x},${y}`;
-    item.x = x;
-    item.y = y;
-    this.items[loc] = item;
+  async throwItem(item: Item, targetX: number, targetY: number): Promise<void> {
+    const FRAME_MS = 80;
+    let path: [number, number][] = [];
+    for (const loc of bresenham(this.player.x, this.player.y, targetX, targetY).slice(1)) {
+      path.push(loc);
+      if (this.occupied(loc[0], loc[1]))
+        break;
+    }
+
+    this.isAnimating = true;
+    for (const [x, y] of path) {
+      this.thrownItem = { item, x, y };
+      await new Promise<void>(resolve => setTimeout(resolve, FRAME_MS));
+    }
+    this.thrownItem = null;
+    this.isAnimating = false;
+
+    item.x = targetX;
+    item.y = targetY;
+    this.items[`${targetX},${targetY}`] = item;
   }
 }
