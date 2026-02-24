@@ -1,15 +1,20 @@
 import { Actor } from "./Actor";
+import { Item } from "./Item";
 
 export class Player extends Actor {
   health: number;
   readonly maxHealth: number;
-  inventory: string[] = [];
+  inventory: Item[] = [];
 
   constructor(x: number, y: number, maxHealth: number = 3) {
     super(x, y, "#b45252", "Snerk");
     this.maxHealth = maxHealth;
     this.health = maxHealth;
-    this.inventory = [ "rock", "rock", "wasps' nest" ];
+    this.inventory = [ 
+      new Item(-1, -1, "rock", "Has a good weight and heft for throwing.", "*", "#868188"),
+      new Item(-1, -1, "rock", "Has a good weight and heft for throwing.", "*", "#868188"),
+      new Item(-1, -1, "wasp's nest", "It is buzzing with angry insects.", "&", "#ede19e")
+     ];
   }
 
   get isAlive(): boolean {

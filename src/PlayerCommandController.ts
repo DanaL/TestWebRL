@@ -34,7 +34,7 @@ export class PlayerCommandController extends InputController {
     if (e.key == "i") {
       var txt: string = "";
       for (const item of this.game.state.player.inventory) {
-        txt += indefArticle(item) + "\n";
+        txt += indefArticle(item.name) + "\n";
       }
 
       const popup = new InventoryMenu("Inventory", "You are empty handed.", this.game.state.player.inventory, 3, 10);

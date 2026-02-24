@@ -3,6 +3,7 @@ import { LineScanner } from "./LineScanner";
 import { Renderer } from "./Renderer";
 import { Popup } from "./Popup";
 import { InputController } from "./InputController";
+import { Item } from "./Item";
 
 export class MenuController extends InputController {
   private game: Game;
@@ -28,17 +29,17 @@ export class MenuController extends InputController {
 
 export class InventoryMenu extends Popup {
   public currRow: number;
-  private items: string[];
+  private items: Item[];
   private emptyMsg: string;
 
   get itemCount(): number { return this.items.length; }
   
-  constructor(title: string, emptyMsg: string, items: string[], row: number, col: number) {    
+  constructor(title: string, emptyMsg: string, items: Item[], row: number, col: number) {    
     let maxWidth: number = items.length > 0 ? title.length : emptyMsg.length;
 
     for (let item of items) {
-      if (item.length + 1 > maxWidth)
-        maxWidth = item.length + 1;
+      if (item.name.length + 1 > maxWidth)
+        maxWidth = item.name.length + 1;
     }
 
     super(title, "", row, col, maxWidth);
@@ -71,7 +72,7 @@ export class InventoryMenu extends Popup {
         let col = this.openContentRow(renderer, row);
         const bg = r === this.currRow ? "#ede19e" : "#000";
         const fg = r === this.currRow ? "#000" : "#fff";
-        for (const ch of this.items[r]) {
+        for (const ch of this.items[r].name) {
           renderer.drawChar(row, col++, ch,  fg, bg);
         }
         while (col <= this.col + this.maxWidth + 1) {
