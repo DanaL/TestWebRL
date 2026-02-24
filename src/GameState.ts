@@ -212,13 +212,10 @@ export class GameState {
   }
 
   private handleNoise(x: number, y: number, radius: number): void {
-    for (const loc of this.floodFill(x, y, radius)) {
-      const [nx, ny] = loc.split(",").map(Number);
-
-      for (let mob of this.villagers) {
-        if (mob.x == nx && mob.y == ny) {
-          this.addMessage(`The ${mob.name} is alerted!`);
-        }
+    const area = this.floodFill(x, y, radius);
+    for (const mob of this.villagers) {
+      if (area.has(`${mob.x},${mob.y}`)) {
+        mob.hearNoise(x, y);    
       }
     }
   }

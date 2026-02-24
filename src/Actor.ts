@@ -1,6 +1,7 @@
 import * as ROT from "rot-js";
 import type { GameState } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
+import { distance } from "./Utils";
 
 const ActorState = {
   Idle: "Idle",
@@ -35,6 +36,9 @@ export abstract class Actor {
   }
 
   abstract act(): Promise<void>;
+
+  // Override in subclasses that react to nearby sounds.
+  hearNoise(_x: number, _y: number): void {}
 }
 
 export class Guard extends Actor {
@@ -43,12 +47,33 @@ export class Guard extends Actor {
   private readonly patrolPath: [number, number][];
   private patrolIndex = 0;
 
+  private prevState: ActorState = ActorState.Idle;
+  private returnX = 0;
+  private returnY = 0;
+  private investigateX = 0;
+  private investigateY = 0;
+  private investigatePhase: "goto" | "return" = "goto";
+
   constructor(x: number, y: number, colour: string, name: string, state: ActorState, gs: GameState, patrolPath: [number, number][] = []) {
     super(x, y, colour, name);
     this.gs = gs;
     this.attentionRadius = 7;
     this.state = state;
     this.patrolPath = patrolPath;
+  }
+
+  override hearNoise(x: number, y: number): void {
+    if (this.state === ActorState.Investigating) 
+      return;
+    this.prevState = this.state;
+    this.returnX = this.x;
+    this.returnY = this.y;
+    this.investigateX = x;
+    this.investigateY = y;
+    this.investigatePhase = "goto";
+    this.state = ActorState.Investigating;
+
+    this.gs.addMessage(`The ${this.name} says, "What's that?"`);
   }
 
   private rotatedFacing(degrees: number): [number, number] {
@@ -89,6 +114,47 @@ export class Guard extends Actor {
           this.rotDir *= -1;
         }
         [this.facingDx, this.facingDy] = this.rotatedFacing(this.rotDir * 20);
+        break;
+      }
+      case ActorState.Investigating: {
+        const [targetX, targetY] = this.investigatePhase === "goto"
+          ? [this.investigateX, this.investigateY]
+          : [this.returnX, this.returnY];
+
+        const dist = distance(this.x, this.y, targetX, targetY);
+        const arrived = this.investigatePhase === "goto" ? dist <= 1 : dist === 0;
+
+        if (arrived) {
+          if (this.investigatePhase === "goto") {
+            this.gs.addMessage(`The ${this.name} says, "Hmmm."`);
+            this.investigatePhase = "return";
+          } else {
+            this.state = this.prevState;
+          }
+          break;
+        }
+
+        // Use A* to find next step toward target
+        const astar = new ROT.Path.AStar(targetX, targetY, (x, y) => {
+          const t = this.gs.map[`${x},${y}`];
+          return t !== undefined && TERRAIN_DEF[t].walkable;
+        }, { topology: 4 });
+
+        let step = 0;
+        let nextX = this.x;
+        let nextY = this.y;
+        astar.compute(this.x, this.y, (x, y) => {
+          if (step === 1) { nextX = x; nextY = y; }
+          step++;
+        });
+
+        const dx = nextX - this.x;
+        const dy = nextY - this.y;
+        if (dx !== 0 || dy !== 0) {
+          this.facingDx = dx;
+          this.facingDy = dy;
+          this.gs.tryMove(dx, dy, null, this);
+        }
         break;
       }
     }
