@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Adventurer } from "./Actor";
+import { ActorState, Adventurer } from "./Actor";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
 import { bresenham, distance } from "./Utils";
@@ -99,9 +99,10 @@ export class Renderer {
       }
 
       if (actor.barkText && sy >= 2) {
-        const bark = (actor instanceof Adventurer && distance(actor.x, actor.y, state.player.x, state.player.y) > 3)
+        const bark = (actor instanceof Adventurer && actor.state !== ActorState.Angry && distance(actor.x, actor.y, state.player.x, state.player.y) > 3)
           ? "*mumble, mumble*"
           : actor.barkText;
+
         const textStart = Math.max(0, Math.min(vpW - bark.length, sx - Math.floor(bark.length / 2)));
         for (let i = 0; i < bark.length; i++) {
           barkCells[`${textStart + i},${sy - 2}`] = { glyph: bark[i], fg: "#fff", bg: "#333", sx: textStart + i, sy: sy - 2 };

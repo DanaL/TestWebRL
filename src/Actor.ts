@@ -315,23 +315,28 @@ export class Barmaid extends Actor {
       }
     } else if (this.barkCooldown > 0) {
       this.barkCooldown--;
-      if (this.barkCooldown === 0) {        
-        switch (Math.floor(ROT.RNG.getUniform() * 3)) {
-          case 0:
-            this.barkText = "The mutton is excellent tonight.";
-            break;
-          case 1:
-            this.barkText = "Another ale?";
-            break;
-          case 2:
-            this.barkText = "Adventurers never tip well.";
-            break;
-        }        
+      
+      if (this.barkCooldown === 0) {       
+        this.barkText = this.pickBark(); 
         this.barkDisplayTurns = 3;      
       }
     }
 
     return Promise.resolve();
+  }
+
+  private pickBark(): string {
+    if (this.state === ActorState.Angry)
+      return "Ugh! Someone do something about that kobold!";
+
+    switch (Math.floor(ROT.RNG.getUniform() * 3)) {
+      case 0:
+        return "The mutton is excellent tonight.";
+      case 1:
+        return "Another ale?";            
+      default:
+        return "Adventurers never tip well.";
+    }
   }
 }
 
@@ -425,7 +430,7 @@ export class Adventurer extends Actor {
       this.barkCooldown--;
       if (this.barkCooldown === 0) {
         if (!Adventurer.anyoneBarking) {
-          this.barkText = this.barks[Math.floor(ROT.RNG.getUniform() * this.barks.length)];
+          this.barkText = this.pickBark();
           this.barkDisplayTurns = 3;
           Adventurer.anyoneBarking = true;
         } else {
@@ -435,6 +440,12 @@ export class Adventurer extends Actor {
     }
 
     return Promise.resolve();
+  }
+
+  private pickBark(): string {
+    return this.state === ActorState.Angry 
+      ? "A kobold? Here? Well I'm off the clock..."
+      : this.barks[Math.floor(ROT.RNG.getUniform() * this.barks.length)];
   }
 }
 
