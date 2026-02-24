@@ -1,7 +1,7 @@
 import * as ROT from "rot-js";
 import type { GameState } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
-import { distance, adj8 } from "./Utils";
+import { distance, adj8, adj8Locs } from "./Utils";
 
 const ActorState = {
   Idle: "Idle",
@@ -451,20 +451,7 @@ export class Wasp extends Actor {
   }
 
   act(): Promise<void> {
-    let dx = 0;
-    let dy = 0;
-    const dir = Math.floor(ROT.RNG.getUniform() * 4);
-
-    switch (dir) {
-      case 0: dy = -1; break; // north
-      case 1: dy =  1; break; // south
-      case 2: dx =  1; break; // east
-      case 3: dx = -1; break; // west
-    }
-
-    this.gs.tryMove(dx, dy, null, this);
-
-    // TODO: wasp will still kobold if they are adjacent and fright nearby non-wasp villagers
+    // Frighten nearby villagers
     const fov = new ROT.FOV.PreciseShadowcasting((x, y) => {
       const terrain = this.gs.map[`${x},${y}`];
       return terrain !== undefined && !TERRAIN_DEF[terrain].opaque;
@@ -472,16 +459,35 @@ export class Wasp extends Actor {
 
     fov.compute(this.x, this.y, 5, (x, y, _r, visibility) => {
       if (!visibility) 
-        return;      
-      if (dx === 0 && dy === 0) 
         return;
-
+      
       for (let actor of this.gs.villagers) {
         if (actor.name !== "wasp" && actor.x === x && actor.y === y) {
           actor.becomeAfraid(this.x, this.y, this.gs);          
         }
       }
     });
+
+    // Can we sting the player?
+    let stingPlayer = distance(this.x, this.y, this.gs.player.x, this.gs.player.y) <= 1;
+    if (stingPlayer) {
+      this.gs.addMessage("The wasp stings you!");
+      this.gs.player.health -= 1;
+    } else {
+      // If we can't sting the player, do a random move    
+      let dx = 0;
+      let dy = 0;
+      const dir = Math.floor(ROT.RNG.getUniform() * 4);
+
+      switch (dir) {
+        case 0: dy = -1; break; // north
+        case 1: dy =  1; break; // south
+        case 2: dx =  1; break; // east
+        case 3: dx = -1; break; // west
+      }
+
+      this.gs.tryMove(dx, dy, null, this);
+    }
 
     // Wasps disappear after a few turns
     if (--this.duration < 0) {
