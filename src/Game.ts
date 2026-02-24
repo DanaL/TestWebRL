@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Guard, Adventurer, Barmaid, Barfly } from "./Actor";
+import { Guard, Adventurer, Barmaid, Barfly, ActorState } from "./Actor";
 import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 import { InputController } from "./InputController";
@@ -56,12 +56,26 @@ export class Game {
     state.items[`${x},${y}`] = egg;
   }
 
-  private setupVillagers(scheduler: Scheduler, state: GameState, eggLocation: number): void {
-    let guard1 = new Guard(107, 10, "#b8b5b9", "Guard", state);
-    guard1.description = "A stinky human who's carrying a sword.";
+  private setupVillagers(scheduler: Scheduler, gs: GameState, eggLocation: number): void {
+    let guard1 = new Guard(107, 10, "#b8b5b9", "Guard", ActorState.Patrolling, gs);
+    guard1.description = "A stinky human who's carrying a sword.";    
     scheduler.add(guard1, true);
     this.state.villagers.push(guard1);
     
+    let guard2 = new Guard(160, 12, "#b8b5b9", "Guard", ActorState.Guarding, gs);
+    guard2.description = "A stinky human who's holding a spear.";    
+    guard2.facingDx = 0;
+    guard2.facingDy = 1;
+    scheduler.add(guard2, true);
+    this.state.villagers.push(guard2);
+
+    let guard3 = new Guard(168, 20, "#b8b5b9", "Guard", ActorState.Guarding, gs);
+    guard3.description = "A stinky human who's holding a club.";
+    guard3.facingDx = 0;
+    guard3.facingDy = -1;
+    scheduler.add(guard3, true);
+    this.state.villagers.push(guard3);
+
     let b1 = ""; 
     let b2 = ""; 
     let b3 = "";
@@ -88,7 +102,7 @@ export class Game {
       "Another cup of wine, please.",
       "Hmm. Bloodstains on my robe.",
       b1
-    ], state);
+    ], gs);
     
     adven1.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven1, true);
@@ -99,7 +113,7 @@ export class Game {
       "There were so many traps.",
       "You guys were too noisy.",
       b2
-    ], state);
+    ], gs);
     adven2.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven2, true);
     this.state.villagers.push(adven2);
@@ -109,22 +123,22 @@ export class Game {
       "Nothing like good ale after a dungeon crawl!",
       "Maybe I'll by a new sword.",
       b3
-    ], state);
+    ], gs);
     adven3.description = "One of the stinky humans what robbed your clan.";
     scheduler.add(adven3, true);
     this.state.villagers.push(adven3);
 
-    let barmaid = new Barmaid(96, 21, "#edc8c4", "Barmaid", state);
+    let barmaid = new Barmaid(96, 21, "#edc8c4", "Barmaid", gs);
     barmaid.description = "A stinky human carrying a tray of mugs.";
     scheduler.add(barmaid, true);
     this.state.villagers.push(barmaid);
 
-    let barfly1 = new Barfly(95, 18, "#4b80ca", "Barfly", state);
+    let barfly1 = new Barfly(95, 18, "#4b80ca", "Barfly", gs);
     barfly1.description = "Another stinky human.";
     scheduler.add(barfly1, true);
     this.state.villagers.push(barfly1);
 
-    let barfly2 = new Barfly(104, 23, "#4b80ca", "Barfly", state);
+    let barfly2 = new Barfly(104, 23, "#4b80ca", "Barfly", gs);
     barfly2.description = "Another stinky human.";
     scheduler.add(barfly2, true);
     this.state.villagers.push(barfly2);

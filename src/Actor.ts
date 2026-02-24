@@ -1,6 +1,17 @@
 import * as ROT from "rot-js";
 import type { GameState } from "./GameState";
-import { Terrain } from "./Terrain";
+import { Terrain, TERRAIN_DEF } from "./Terrain";
+
+const ActorState = {
+  Idle: "Idle",
+  Afraid: "Afraid",
+  Angry: "Angry",
+  Patrolling: "Patrolling",
+  Guarding: "Guarding",
+} as const;
+type ActorState = typeof ActorState[keyof typeof ActorState];
+
+export { ActorState }
 
 export abstract class Actor {
   x: number;
@@ -13,6 +24,7 @@ export abstract class Actor {
   facingDy: number = 0;
   attentionRadius: number = 0;
   attentionCone: Set<string> = new Set();
+  state: ActorState = ActorState.Idle;
 
   constructor(x: number, y: number, colour: string, name: string) {
     this.x = x;
@@ -26,35 +38,61 @@ export abstract class Actor {
 
 export class Guard extends Actor {
   private dir = 1;
-  private readonly state: GameState;
+  private rotDir = 1;
+  private readonly gs: GameState;
 
-  constructor(x: number, y: number, colour: string, name: string, state: GameState) {
+  constructor(x: number, y: number, colour: string, name: string, state: ActorState, gs: GameState) {
     super(x, y, colour, name);
+    this.gs = gs;
+    this.attentionRadius = 7;
     this.state = state;
-    this.attentionRadius = 9;
   }
 
   act(): Promise<void> {
-    this.facingDx = this.dir;
-    this.facingDy = 0;
-    this.state.tryMove(this.dir, 0, null, this);
-    this.dir *= -1;
-    this.attentionCone = this.state.computeAttentionCone(this);
-    if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
-      this.state.addMessage(`The ${this.name} sees you!`);
+    switch (this.state) {
+      case ActorState.Patrolling:
+        this.facingDx = this.dir;
+        this.facingDy = 0;
+        this.gs.tryMove(this.dir, 0, null, this);
+        this.dir *= -1;
+        break;
+      case ActorState.Guarding: {        
+        const testAngle = this.rotDir * 20 * Math.PI / 180;
+        const testDx = this.facingDx * Math.cos(testAngle) - this.facingDy * Math.sin(testAngle);
+        const testDy = this.facingDx * Math.sin(testAngle) + this.facingDy * Math.cos(testAngle);
+        const lookX = this.x + Math.round(testDx);
+        const lookY = this.y + Math.round(testDy);
+        const terrain = this.gs.map[`${lookX},${lookY}`];
+        if (terrain !== undefined && TERRAIN_DEF[terrain].opaque) {
+          this.rotDir *= -1;
+        }
+        
+        const angle = this.rotDir * 20 * Math.PI / 180;
+        const newDx = this.facingDx * Math.cos(angle) - this.facingDy * Math.sin(angle);
+        const newDy = this.facingDx * Math.sin(angle) + this.facingDy * Math.cos(angle);
+        this.facingDx = newDx;
+        this.facingDy = newDy;
+        break;
+      }
     }
+
+    this.attentionCone = this.gs.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
+      this.gs.addMessage(`The ${this.name} sees you!`);
+    }
+
     return Promise.resolve();
   }
 }
 
 export class Barmaid extends Actor {
-  private readonly state: GameState;
+  private readonly gs: GameState;
   private barkDisplayTurns = 0;
   private barkCooldown: number;
 
   constructor(x: number, y: number, colour: string, name: string, state: GameState) {
     super(x, y, colour, name);
-    this.state = state;
+    this.gs = state;
     this.attentionRadius = 3;
     this.barkCooldown = 3 + Math.floor(ROT.RNG.getUniform() * 5);
   }
@@ -77,15 +115,15 @@ export class Barmaid extends Actor {
     // Barmaid won't leave the tavern normally
     const nx = this.x + dx;
     const ny = this.y + dy;
-    const terrain = this.state.map[`${nx},${ny}`];
+    const terrain = this.gs.map[`${nx},${ny}`];
 
     if (terrain === Terrain.Floor) {
-      this.state.tryMove(dx, dy, null, this);
+      this.gs.tryMove(dx, dy, null, this);
     }
     
-    this.attentionCone = this.state.computeAttentionCone(this);
-    if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
-      this.state.addMessage(`The ${this.name} sees you!`);
+    this.attentionCone = this.gs.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
+      this.gs.addMessage(`The ${this.name} sees you!`);
     }
 
     if (this.barkDisplayTurns > 0) {
@@ -117,11 +155,11 @@ export class Barmaid extends Actor {
 }
 
 export class Barfly extends Actor {
-  private readonly state: GameState;
+  private readonly gs: GameState;
   
   constructor(x: number, y: number, colour: string, name: string, state: GameState) {
     super(x, y, colour, name);
-    this.state = state;
+    this.gs = state;
     this.attentionRadius = 3;
   }
 
@@ -143,15 +181,15 @@ export class Barfly extends Actor {
     // Barfly won't leave the tavern normally
     const nx = this.x + dx;
     const ny = this.y + dy;
-    const terrain = this.state.map[`${nx},${ny}`];
+    const terrain = this.gs.map[`${nx},${ny}`];
 
     if (terrain === Terrain.Floor) {
-      this.state.tryMove(dx, dy, null, this);
+      this.gs.tryMove(dx, dy, null, this);
     }
 
-    this.attentionCone = this.state.computeAttentionCone(this);
-    if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
-      this.state.addMessage(`The ${this.name} sees you!`);
+    this.attentionCone = this.gs.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
+      this.gs.addMessage(`The ${this.name} sees you!`);
     }
     
     return Promise.resolve();
@@ -169,12 +207,12 @@ export class Adventurer extends Actor {
   private readonly barks: string[];
   private barkDisplayTurns = 0;
   private barkCooldown: number;
-  private readonly state: GameState;
+  private readonly gs: GameState;
 
   constructor(x: number, y: number, colour: string, name: string, barks: string[], state: GameState) {
     super(x, y, colour, name);
     this.barks = barks;
-    this.state = state;
+    this.gs = state;
     this.attentionRadius = 2;
     this.barkCooldown = 3 + Math.floor(ROT.RNG.getUniform() * 5);
   }
@@ -183,9 +221,9 @@ export class Adventurer extends Actor {
     const d = DIRS_8[Math.floor(ROT.RNG.getUniform() * 8)];
     this.facingDx = d[0];
     this.facingDy = d[1];
-    this.attentionCone = this.state.computeAttentionCone(this);
-    if (this.attentionCone.has(`${this.state.player.x},${this.state.player.y}`)) {
-      this.state.addMessage(`The ${this.name} sees you!`);
+    this.attentionCone = this.gs.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
+      this.gs.addMessage(`The ${this.name} sees you!`);
     }
 
     if (this.barkDisplayTurns > 0) {
