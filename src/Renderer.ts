@@ -3,6 +3,8 @@ import { Adventurer } from "./Actor";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
 
+type Cell = { glyph: string; fg: string; bg: string | null; sx: number; sy: number };
+
 export class Renderer {
   private display: ROT.Display;
   private width: number;
@@ -40,68 +42,70 @@ export class Renderer {
     this.display.clear();
 
     const { camX, camY, vpW, vpH } = this.cameraFor(state);
+    const cells: Record<string, Cell> = {};
+    const barkCells: Record<string, Cell> = {};
 
     for (const key in state.map) {
       const [wx, wy] = key.split(",").map(Number);
       const sx = wx - camX;
       const sy = wy - camY;
-      if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH) 
+      if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH)
         continue;
+
+      const def = TERRAIN_DEF[state.map[key]];
 
       if (state.visible[key]) {
-        const def = TERRAIN_DEF[state.map[key]];
-        const ch = state.items[key] ?? def.glyph;
-        const fg = state.items[key] ? "#ede19e" : def.fg;
-        this.display.draw(sx, sy + this.MAP_Y, ch, fg, null);
+        const cell = { glyph: def.glyph, fg: def.fg, bg: null, sx: sx, sy: sy};
+        cells[`${sx},${sy}`] = cell;
       } else if (state.explored[key]) {
-        const def = TERRAIN_DEF[state.map[key]];
-        this.display.draw(sx, sy + this.MAP_Y, def.glyph, "#222", null);
+        const cell = { glyph: def.glyph, fg: "#222", bg: null, sx: sx, sy: sy};
+        cells[`${sx},${sy}`] = cell;
       }
     }
 
     for (const actor of state.villagers) {
-      if (!state.visible[`${actor.x},${actor.y}`]) 
+      if (!state.visible[`${actor.x},${actor.y}`])
         continue;
 
+      const sx = actor.x - camX;
+      const sy = actor.y - camY;
+      const fg = state.examinedActor === actor ? "#000" : actor.colour;
+      const bg = state.examinedActor === actor ? "#cf8acb" : null;
+      cells[`${sx},${sy}`] = { glyph: '@', fg: fg, bg: bg, sx: sx, sy: sy };
+
       for (const key of actor.attentionCone) {
-        if (!state.visible[key]) continue;
+        if (!state.visible[key])
+          continue;
         const [wx, wy] = key.split(",").map(Number);
-        const sx = wx - camX;
-        const sy = wy - camY;
-        if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH) continue;
-        const terrain = state.map[key];
-        if (terrain === undefined) continue;
-        const def = TERRAIN_DEF[terrain];
-        const ch = state.items[key] ?? def.glyph;
-        const fg = state.items[key] ? "#ede19e" : def.fg;
-        this.display.draw(sx, sy + this.MAP_Y, ch, fg, "#2a1515");
+        const asx = wx - camX;
+        const asy = wy - camY;
+        if (cells[`${asx},${asy}`]) {
+          cells[`${asx},${asy}`].bg = "#2a1515";
+        }
+      }
+
+      if (actor.barkText && sy >= 2) {
+        const bdx = Math.abs(actor.x - state.player.x);
+        const bdy = Math.abs(actor.y - state.player.y);
+        const bark = (actor instanceof Adventurer && Math.max(bdx, bdy) > 3)
+          ? "*mumble, mumble*"
+          : actor.barkText;
+        const textStart = Math.max(0, Math.min(vpW - bark.length, sx - Math.floor(bark.length / 2)));
+        for (let i = 0; i < bark.length; i++) {
+          barkCells[`${textStart + i},${sy - 2}`] = { glyph: bark[i], fg: "#fff", bg: "#333", sx: textStart + i, sy: sy - 2 };
+        }
+        if (sx > 0) {
+          barkCells[`${sx - 1},${sy - 1}`] = { glyph: "\\", fg: "#aaa", bg: "#333", sx: sx - 1, sy: sy - 1 };
+        }
       }
     }
 
-    for (const actor of state.villagers) {
-      if (state.visible[`${actor.x},${actor.y}`]) {
-        const sx = actor.x - camX;
-        const sy = actor.y - camY;
-        const fg = state.examinedActor === actor ? "#000" : actor.colour;
-        const bg = state.examinedActor === actor ? "#cf8acb" : null;
-        this.display.draw(sx, sy + this.MAP_Y, "@", fg, bg);
+    for (const cell of Object.values(cells)) {
+      this.display.draw(cell.sx, cell.sy + this.MAP_Y, cell.glyph, cell.fg, cell.bg);
+    }
 
-        if (actor.barkText && sy >= 2) {
-          const dx = Math.abs(actor.x - state.player.x);
-          const dy = Math.abs(actor.y - state.player.y);
-          const bark = (actor instanceof Adventurer && Math.max(dx, dy) > 3)
-            ? "*mumble, mumble*"
-            : actor.barkText!;
-
-          const textStart = Math.max(0, Math.min(vpW - bark.length, sx - Math.floor(bark.length / 2)));
-          for (let i = 0; i < bark.length; i++) {
-            this.display.draw(textStart + i, sy + this.MAP_Y - 2, bark[i], "#fff", "#333");
-          }
-          if (sx > 0) {
-            this.display.draw(sx - 1, sy + this.MAP_Y - 1, "\\", "#aaa", "#333");
-          }
-        }
-      }
+    for (const cell of Object.values(barkCells)) {
+      this.display.draw(cell.sx, cell.sy + this.MAP_Y, cell.glyph, cell.fg, cell.bg);
     }
 
     this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#b45252", null);

@@ -4,6 +4,7 @@ import { Player } from "./Player";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
 import { InfoPopupController } from "./InputController";
+import { Item } from "./Item";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { loadMap } from "./MapLoader";
@@ -14,7 +15,7 @@ export class GameState {
 
   map: Record<string, TerrainType> = {};
   freeCells: string[] = [];
-  items: Record<string, string> = {};
+  items: Record<string, Item> = {};
   visible: Record<string, boolean> = {};
   explored: Record<string, boolean> = {};
 
@@ -25,7 +26,7 @@ export class GameState {
   turn = 0;
   messages: string[] = ["Move with arrow keys or WASD. 'x' to Examine."];
 
-  private fov: ROT.FOV.PreciseShadowcasting;
+  private fov: InstanceType<typeof ROT.FOV.PreciseShadowcasting>;
 
   constructor() {
     const loaded = loadMap();
