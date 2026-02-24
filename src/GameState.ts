@@ -30,7 +30,7 @@ export class GameState {
   turn = 0;
   messages: string[] = ["Move with arrow keys or WASD. 'x' to Examine."];
 
-  private fov: InstanceType<typeof ROT.FOV.PreciseShadowcasting>;
+  fov: InstanceType<typeof ROT.FOV.PreciseShadowcasting>;
 
   constructor() {
     const loaded = loadMap();
@@ -224,7 +224,7 @@ export class GameState {
         const terrain = this.map[`${loc[0]},${loc[1]}`];
         ++i;
         if (!(this.occupied(loc[0], loc[1]) || terrain === undefined || !TERRAIN_DEF[terrain].walkable)) {
-          let wasp = new Wasp(loc[0], loc[1], this);
+          let wasp = new Wasp(loc[0], loc[1], this, game.scheduler);
           game.scheduler.add(wasp, true);
           this.villagers.push(wasp);
           break;

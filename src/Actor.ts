@@ -331,12 +331,16 @@ export class Adventurer extends Actor {
 
 export class Wasp extends Actor {
   private readonly gs: GameState;
-
-  constructor(x: number, y: number, state: GameState) {
+  private duration: number;
+  private readonly scheduler: InstanceType<typeof ROT.Scheduler.Simple>;
+  
+  constructor(x: number, y: number, state: GameState, scheduler: InstanceType<typeof ROT.Scheduler.Simple>) {
     super(x, y, "#ede19e", "wasp");
     this.gs = state;
     this.description = "An angry, buzzing wasp.";
     this.ch = "I";
+    this.duration = 5 + Math.floor(ROT.RNG.getUniform() * 3);
+    this.scheduler = scheduler;
   }
 
   act(): Promise<void> {
@@ -351,8 +355,33 @@ export class Wasp extends Actor {
       case 3: dx = -1; break; // west
     }
 
-    // TODO: wasp will still kobold if they are adjacent and fright nearby non-wasp villagers
     this.gs.tryMove(dx, dy, null, this);
+
+    // TODO: wasp will still kobold if they are adjacent and fright nearby non-wasp villagers
+    const fov = new ROT.FOV.PreciseShadowcasting((x, y) => {
+      const terrain = this.gs.map[`${x},${y}`];
+      return terrain !== undefined && !TERRAIN_DEF[terrain].opaque;
+    });
+
+    fov.compute(this.x, this.y, 5, (x, y, _r, visibility) => {
+      if (!visibility) 
+        return;      
+      if (dx === 0 && dy === 0) 
+        return;
+
+      for (let actor of this.gs.villagers) {
+        if (actor.name !== "wasp" && actor.state !== ActorState.Afraid && actor.x == x && actor.y == y) {
+          actor.state = ActorState.Afraid;
+          this.gs.addMessage(`The ${actor.name} becomes frightened!`);
+        }
+      }
+    });
+
+    // Wasps disappear after a few turns
+    if (--this.duration < 0) {
+      this.gs.villagers = this.gs.villagers.filter(v => v !== this);
+      this.scheduler.remove(this);
+    }
 
     return Promise.resolve();
   }
