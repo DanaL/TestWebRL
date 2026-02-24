@@ -27,7 +27,7 @@ const TERRAIN_DEF: Record<TerrainType, TerrainDef> = {
   [Terrain.Wall]:  { glyph: '#', fg: '#646365', walkable: false, opaque: true },
   [Terrain.Grass]: { glyph: '.', fg: '#8ab060', walkable: true, opaque: false },
   [Terrain.Road]:  { glyph: '.', fg: '#80493a', walkable: true, opaque: false },
-  [Terrain.Tree]:  { glyph: 'ϙ', fg: '#8ab060', walkable: true, opaque: false },
+  [Terrain.Tree]:  { glyph: 'ϙ', fg: '#8ab060', walkable: true, opaque: true },
   [Terrain.Water]: { glyph: '}', fg: '#4488ff', walkable: false, opaque: false },
   [Terrain.HWindow]: { glyph: '-', fg: '#f2f0e5', walkable: false, opaque: false },
   [Terrain.VWindow]: { glyph: '|', fg: '#f2f0e5', walkable: false, opaque: false },
