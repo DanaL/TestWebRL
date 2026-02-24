@@ -37,41 +37,57 @@ export abstract class Actor {
 }
 
 export class Guard extends Actor {
-  private dir = 1;
   private rotDir = 1;
   private readonly gs: GameState;
+  private readonly patrolPath: [number, number][];
+  private patrolIndex = 0;
 
-  constructor(x: number, y: number, colour: string, name: string, state: ActorState, gs: GameState) {
+  constructor(x: number, y: number, colour: string, name: string, state: ActorState, gs: GameState, patrolPath: [number, number][] = []) {
     super(x, y, colour, name);
     this.gs = gs;
     this.attentionRadius = 7;
     this.state = state;
+    this.patrolPath = patrolPath;
+  }
+
+  private rotatedFacing(degrees: number): [number, number] {
+    const a = degrees * Math.PI / 180;
+    return [
+      this.facingDx * Math.cos(a) - this.facingDy * Math.sin(a),
+      this.facingDx * Math.sin(a) + this.facingDy * Math.cos(a),
+    ];
   }
 
   act(): Promise<void> {
     switch (this.state) {
-      case ActorState.Patrolling:
-        this.facingDx = this.dir;
-        this.facingDy = 0;
-        this.gs.tryMove(this.dir, 0, null, this);
-        this.dir *= -1;
+      case ActorState.Patrolling: {
+        if (this.patrolPath.length === 0) break;
+        const [tx, ty] = this.patrolPath[this.patrolIndex];
+        const dx = Math.sign(tx - this.x);
+        const dy = Math.sign(ty - this.y);
+        this.gs.tryMove(dx, dy, null, this);
+        if (this.x === tx && this.y === ty) {
+          this.patrolIndex = (this.patrolIndex + 1) % this.patrolPath.length;
+        }
+        // Face direction of travel, but 1-in-3 chance to glance left or right
+        if (dx !== 0 || dy !== 0) {
+          this.facingDx = dx;
+          this.facingDy = dy;
+          if (ROT.RNG.getUniform() < 1/3) {
+            const side = ROT.RNG.getUniform() < 0.5 ? 1 : -1;
+            [this.facingDx, this.facingDy] = this.rotatedFacing(20 * side);
+          }
+        }
         break;
-      case ActorState.Guarding: {        
-        const testAngle = this.rotDir * 20 * Math.PI / 180;
-        const testDx = this.facingDx * Math.cos(testAngle) - this.facingDy * Math.sin(testAngle);
-        const testDy = this.facingDx * Math.sin(testAngle) + this.facingDy * Math.cos(testAngle);
-        const lookX = this.x + Math.round(testDx);
-        const lookY = this.y + Math.round(testDy);
-        const terrain = this.gs.map[`${lookX},${lookY}`];
+      }
+      case ActorState.Guarding: {
+        // Preview the candidate facing; reverse scan direction if it hits a wall
+        const [testDx, testDy] = this.rotatedFacing(this.rotDir * 20);
+        const terrain = this.gs.map[`${this.x + Math.round(testDx)},${this.y + Math.round(testDy)}`];
         if (terrain !== undefined && TERRAIN_DEF[terrain].opaque) {
           this.rotDir *= -1;
         }
-        
-        const angle = this.rotDir * 20 * Math.PI / 180;
-        const newDx = this.facingDx * Math.cos(angle) - this.facingDy * Math.sin(angle);
-        const newDy = this.facingDx * Math.sin(angle) + this.facingDy * Math.cos(angle);
-        this.facingDx = newDx;
-        this.facingDy = newDy;
+        [this.facingDx, this.facingDy] = this.rotatedFacing(this.rotDir * 20);
         break;
       }
     }

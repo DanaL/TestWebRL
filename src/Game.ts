@@ -57,7 +57,12 @@ export class Game {
   }
 
   private setupVillagers(scheduler: Scheduler, gs: GameState, eggLocation: number): void {
-    let guard1 = new Guard(107, 10, "#b8b5b9", "Guard", ActorState.Patrolling, gs);
+    const patrolPath: [number, number][] = [
+      [107, 10], [135, 10], [135, 11], [140, 11], [140, 12], [141, 12],
+      [141, 24], [132, 24], [132, 25], [131, 25], [131, 26], [123, 26],
+      [123, 23], [115, 23], [115, 20], [113, 20], [113, 19], [107, 19],
+    ];
+    let guard1 = new Guard(107, 10, "#b8b5b9", "Guard", ActorState.Patrolling, gs, patrolPath);
     guard1.description = "A stinky human who's carrying a sword.";    
     scheduler.add(guard1, true);
     this.state.villagers.push(guard1);
