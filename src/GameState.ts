@@ -163,8 +163,14 @@ export class GameState {
     this.thrownItem = null;
     this.isAnimating = false;
 
-    item.x = targetX;
-    item.y = targetY;
-    this.items[`${targetX},${targetY}`] = item;
+    const loc = `${targetX},${targetY}`;
+    const terrain = this.map[loc];
+    if (terrain == Terrain.Water) {
+      this.addMessage(`The ${item.name} disappears with a splash!`);
+    } else {
+      item.x = targetX;
+      item.y = targetY;
+      this.items[loc] = item;
+    }    
   }
 }

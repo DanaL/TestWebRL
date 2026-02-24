@@ -95,9 +95,9 @@ export class ThrowTargetController extends InputController {
       this.game.state.throwTarget = null;
       this.game.popInputController();
 
+      this.game.state.addMessage(`You throw the ${this.item.name}.`);
       this.game.state.player.inventory = this.game.state.player.inventory.filter(i => i !== this.item);
-      this.game.state.throwItem(this.item, this.tx, this.ty).then(() => {
-        this.game.state.addMessage(`You throw the ${this.item.name}.`);
+      this.game.state.throwItem(this.item, this.tx, this.ty).then(() => {        
         this.game.state.player.endTurn();
       });
     } else if (e.key === 'Escape') {
