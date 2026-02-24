@@ -1,6 +1,7 @@
 export const MOVE_KEYS: Record<string, [number, number]> = {
   ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
   w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0],
+  h: [-1, 0], j: [0, 1], k: [0, -1], l: [1, 0]
 };
 
 export function bresenham(x0: number, y0: number, x1: number, y1: number): [number, number][] {

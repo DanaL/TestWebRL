@@ -166,7 +166,7 @@ export class Renderer {
       const row = msgStartY + (2 - age); // age 0 (newest) → bottom row
       const color = msgColors[2 - age];  // age 0 (newest) → brightest color
       for (let j = 0; j < Math.min(msg.length, this.width); j++) {
-        this.display.draw(j, row, msg[j], color, "#111");
+        this.display.draw(j, row, msg[j], color, "#000");
       }
     }
   }
