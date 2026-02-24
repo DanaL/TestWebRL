@@ -4,6 +4,7 @@ import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 import { InputController } from "./InputController";
 import { Popup } from "./Popup";
+import { Item } from "./Item";
 import type Scheduler from "rot-js/lib/scheduler/scheduler";
 
 export class Game {
@@ -25,11 +26,34 @@ export class Game {
     scheduler.add(state.player, true);
 
     this.setupVillagers(scheduler, state, eggLocation);
+    this.placeEgg(state, eggLocation);
 
     scheduler.add({ act: () => { state.turn++; return Promise.resolve(); } }, true);
 
     this.engine = new ROT.Engine(scheduler);
     this.engine.start();
+  }
+
+  private placeEgg(state: GameState, eggLocation: number): void {
+    let x: number;
+    let y: number;
+    switch (eggLocation) {
+      case 0: // alchemist        
+        x = 134;
+        y = 32;
+        break;
+      case 1: // mayor
+        x = 180;
+        y = 25;
+        break;
+      default: // temple
+        x = 161;
+        y = 6;
+        break;
+    }
+
+    let egg = new Item(x, y, "dragon egg", "A leathery egg emanating warmth and a faint glow.", "O", "#f2f0e5");
+    state.items[`${x},${y}`] = egg;
   }
 
   private setupVillagers(scheduler: Scheduler, state: GameState, eggLocation: number): void {

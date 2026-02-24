@@ -63,6 +63,19 @@ export class Renderer {
       }
     }
 
+    for (const item of Object.values(state.items)) {
+      if (!state.visible[`${item.x},${item.y}`])
+        continue;
+
+      const sx = item.x - camX;
+      const sy = item.y - camY;
+      //const fg = state.examinedActor === actor ? "#000" : actor.colour;
+      const fg = item.colour;
+      const bg = "#000";
+      //const bg = state.examinedActor === actor ? "#cf8acb" : null;
+      cells[`${sx},${sy}`] = { glyph: item.ch, fg: fg, bg: bg, sx: sx, sy: sy };
+    }
+
     for (const actor of state.villagers) {
       if (!state.visible[`${actor.x},${actor.y}`])
         continue;
@@ -119,7 +132,7 @@ export class Renderer {
       this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#b45252" : "#500", "#111");
     }
 
-    const rest = `  Score: ${state.score}  Turn: ${state.turn}  ${state.player.y},${state.player.x}`;
+    const rest = `  Turn: ${state.turn}  ${state.player.y},${state.player.x}`;
     for (let i = 0; i < Math.min(rest.length, this.width - col); i++) {
       this.display.draw(col++, 0, rest[i], "#aaa", "#111");
     }
