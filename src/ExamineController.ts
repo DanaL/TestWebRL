@@ -1,6 +1,5 @@
 import { InputController } from "./InputController";
 import { Game } from "./Game";
-import { Actor } from "./Actor";
 import { Popup } from "./Popup";
 
 type Examinable = { x: number; y: number; name: string; description: string };

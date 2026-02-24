@@ -3,6 +3,7 @@ import { Game } from "./Game";
 import { indefArticle } from "./Utils";
 import { InventoryMenu, MenuController } from "./Inventory";
 import { ExamineController } from "./ExamineController";
+import { ThrowMenuController } from "./ThrowController";
 
 const MOVE_KEYS: Record<string, [number, number]> = {
   ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
@@ -28,6 +29,18 @@ export class PlayerCommandController extends InputController {
       } else {
         state.addMessage("There is nothing interesting to examine.");
       }
+      return;
+    }
+
+    if (e.key === "t") {
+      const inv = this.game.state.player.inventory;
+      if (inv.length === 0) {
+        this.game.state.addMessage("You have nothing to throw.");
+        return;
+      }
+      const menu = new InventoryMenu("Throw what?", "You have nothing to throw.", inv, 3, 10);
+      this.game.pushPopup(menu);
+      this.game.pushInputController(new ThrowMenuController(menu, this.game));
       return;
     }
 

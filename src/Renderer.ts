@@ -2,8 +2,26 @@ import * as ROT from "rot-js";
 import { Adventurer } from "./Actor";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
+import { distance } from "./Utils";
 
 type Cell = { glyph: string; fg: string; bg: string | null; sx: number; sy: number };
+
+function bresenham(x0: number, y0: number, x1: number, y1: number): [number, number][] {
+  const pts: [number, number][] = [];
+  let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+  let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+  let err = dx + dy;
+  while (true) {
+    pts.push([x0, y0]);
+    if (x0 === x1 && y0 === y1) 
+      break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x0 += sx; }
+    if (e2 <= dx) { err += dx; y0 += sy; }
+  }
+  
+  return pts;
+}
 
 export class Renderer {
   private display: ROT.Display;
@@ -98,9 +116,7 @@ export class Renderer {
       }
 
       if (actor.barkText && sy >= 2) {
-        const bdx = Math.abs(actor.x - state.player.x);
-        const bdy = Math.abs(actor.y - state.player.y);
-        const bark = (actor instanceof Adventurer && Math.max(bdx, bdy) > 3)
+        const bark = (actor instanceof Adventurer && distance(actor.x, actor.y, state.player.x, state.player.y) > 3)
           ? "*mumble, mumble*"
           : actor.barkText;
         const textStart = Math.max(0, Math.min(vpW - bark.length, sx - Math.floor(bark.length / 2)));
@@ -119,6 +135,19 @@ export class Renderer {
 
     for (const cell of Object.values(barkCells)) {
       this.display.draw(cell.sx, cell.sy + this.MAP_Y, cell.glyph, cell.fg, cell.bg);
+    }
+
+    if (state.throwTarget) {
+      const line = bresenham(state.player.x, state.player.y, state.throwTarget.x, state.throwTarget.y);
+      for (let i = 1; i < line.length; i++) {
+        const [wx, wy] = line[i];
+        const sx = wx - camX;
+        const sy = wy - camY;
+        if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH) continue;
+        const isEndpoint = i === line.length - 1;
+        const existing = cells[`${sx},${sy}`];
+        this.display.draw(sx, sy + this.MAP_Y, existing?.glyph ?? ' ', existing?.fg ?? '#fff', isEndpoint ? '#ede19e' : '#3a3a00');
+      }
     }
 
     this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "k", "#b45252", null);
