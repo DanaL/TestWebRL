@@ -20,6 +20,7 @@ export class Game {
   constructor(state: GameState, renderer: Renderer) {
     this.state = state;
     this.renderer = renderer;
+    state.game = this;
 
     let eggLocation = Math.floor(ROT.RNG.getUniform() * 3);
     eggLocation = 1;
@@ -30,7 +31,7 @@ export class Game {
     this.setupVillagers(scheduler, state, eggLocation);
     this.placeEgg(state, eggLocation);
 
-    scheduler.add({ act: () => { state.turn++; return Promise.resolve(); } }, true);
+    scheduler.add({ act: () => { state.turn++; state.checkAngerSubsides(); return Promise.resolve(); } }, true);
 
     this.engine = new ROT.Engine(scheduler);
     this.engine.start();

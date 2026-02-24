@@ -39,6 +39,7 @@ export abstract class Actor {
   fleeReturnX: number = 0;
   fleeReturnY: number = 0;
   prevStateBeforeFear: ActorState = ActorState.Idle;
+  stateBeforeAlert: ActorState = ActorState.Idle;
 
   constructor(x: number, y: number, colour: string, name: string) {
     this.x = x;
@@ -252,7 +253,7 @@ export class Guard extends Actor {
 
     this.attentionCone = this.gs.computeAttentionCone(this);
     if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
-      this.gs.addMessage(`The ${this.name} sees you!`);
+      this.gs.playerSpotted();
     }
 
     return Promise.resolve();
@@ -303,7 +304,7 @@ export class Barmaid extends Actor {
     
     this.attentionCone = this.gs.computeAttentionCone(this);
     if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
-      this.gs.addMessage(`The ${this.name} sees you!`);
+      this.gs.playerSpotted();
     }
 
     if (this.barkDisplayTurns > 0) {
@@ -375,7 +376,7 @@ export class Barfly extends Actor {
 
     this.attentionCone = this.gs.computeAttentionCone(this);
     if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
-      this.gs.addMessage(`The ${this.name} sees you!`);
+      this.gs.playerSpotted();
     }
     
     return Promise.resolve();
@@ -410,7 +411,7 @@ export class Adventurer extends Actor {
     this.facingDy = d[1];
     this.attentionCone = this.gs.computeAttentionCone(this);
     if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
-      this.gs.addMessage(`The ${this.name} sees you!`);
+      this.gs.playerSpotted();
     }
 
     if (this.barkDisplayTurns > 0) {
@@ -474,7 +475,7 @@ export class Wasp extends Actor {
     if (stingPlayer) {
       this.gs.addMessage("The wasp stings you!");
       this.gs.player.takeDamage(1);
-      this.gs.checkForDeath(this.game);
+      this.gs.checkForDeath();
     } else {
       // If we can't sting the player, do a random move    
       let dx = 0;

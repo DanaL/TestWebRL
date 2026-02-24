@@ -5,6 +5,7 @@ export class Player extends Actor {
   health: number;
   readonly maxHealth: number;
   inventory: Item[] = [];
+  turnsSinceSeen: number = 0;
 
   constructor(x: number, y: number, maxHealth: number = 3) {
     super(x, y, "#b45252", "Snerk");
@@ -38,6 +39,7 @@ export class Player extends Actor {
   }
 
   endTurn(): void {
+    this.turnsSinceSeen++;
     this._endTurn?.();
     this._endTurn = null;
   }

@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Actor, Wasp } from "./Actor";
+import { Actor, ActorState, Wasp } from "./Actor";
 import { Player } from "./Player";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
@@ -31,6 +31,7 @@ export class GameState {
   messages: string[] = ["Move with arrow keys or WASD. 'x' to Examine."];
 
   fov: InstanceType<typeof ROT.FOV.PreciseShadowcasting>;
+  game!: Game;
 
   constructor() {
     const loaded = loadMap();
@@ -137,11 +138,41 @@ export class GameState {
     return false;
   }
 
-  checkForDeath(game: Game): void {
+  isAlerted: boolean = false;
+
+  playerSpotted(): void {
+    this.player.turnsSinceSeen = 0;
+    if (!this.isAlerted) {
+      this.isAlerted = true;
+      const popup = new Popup("", "Cheese it! You've been spotted!", 3, 10, 32);
+      this.game.pushPopup(popup);
+      this.game.pushInputController(new InfoPopupController(this.game));
+      
+      for (const mob of this.villagers) {
+        if (mob.state !== ActorState.Afraid) {
+          mob.stateBeforeAlert = mob.state;
+          mob.state = ActorState.Angry;
+        }
+      }
+    }
+  }
+
+  checkAngerSubsides(): void {
+    if (this.isAlerted && this.player.turnsSinceSeen > 5) {
+      this.isAlerted = false;      
+      for (const mob of this.villagers) {
+        if (mob.state === ActorState.Angry) {
+          mob.state = mob.stateBeforeAlert;
+        }
+      }
+    }
+  }
+
+  checkForDeath(): void {
     if (!this.player.isAlive) {
       const popup = new Popup("[#b45252 You have died!]", "A wasp has ended your adventure. Skittlebix will be most displeased.", 3, 10, 50);
-      game.pushPopup(popup);
-      game.pushInputController(new InfoPopupController(game, () => location.reload()));
+      this.game.pushPopup(popup);
+      this.game.pushInputController(new InfoPopupController(this.game, () => location.reload()));
     }
   }
 
