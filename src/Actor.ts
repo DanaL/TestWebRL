@@ -10,7 +10,8 @@ const ActorState = {
   Angry: "Angry",
   Patrolling: "Patrolling",
   Guarding: "Guarding",
-  Investigating: "Investigating"
+  Investigating: "Investigating",
+  ReturningToPost: "ReturningToPost"
 } as const;
 type ActorState = typeof ActorState[keyof typeof ActorState];
 
@@ -51,6 +52,7 @@ export abstract class Actor {
   abstract act(): Promise<void>;
 
   hearNoise(_x: number, _y: number): void {}
+  onAngerSubsides(): void {}
 
   becomeAfraid(fearX: number, fearY: number, gs: GameState): void {
     if (this.state === ActorState.Afraid) 
@@ -142,12 +144,23 @@ export class Guard extends Actor {
   private investigateY = 0;
   private investigatePhase: "goto" | "return" = "goto";
 
+  private readonly guardPostX: number;
+  private readonly guardPostY: number;
+
   constructor(x: number, y: number, colour: string, name: string, state: ActorState, gs: GameState, patrolPath: [number, number][] = []) {
     super(x, y, colour, name);
     this.gs = gs;
     this.attentionRadius = 7;
     this.state = state;
     this.patrolPath = patrolPath;
+    this.guardPostX = x;
+    this.guardPostY = y;
+  }
+
+  override onAngerSubsides(): void {
+    if (this.stateBeforeAlert === ActorState.Guarding) {
+      this.state = ActorState.ReturningToPost;
+    }
   }
 
   override hearNoise(x: number, y: number): void {
@@ -204,6 +217,24 @@ export class Guard extends Actor {
         [this.facingDx, this.facingDy] = this.rotatedFacing(this.rotDir * 20);
         break;
       }
+      case ActorState.Angry: {
+        const astar = new ROT.Path.AStar(this.gs.player.x, this.gs.player.y, (x, y) => {
+          const t = this.gs.map[`${x},${y}`];
+          return t !== undefined && TERRAIN_DEF[t].walkable;
+        }, { topology: 4 });
+        let step = 0, nextX = this.x, nextY = this.y;
+        astar.compute(this.x, this.y, (x, y) => {
+          if (step === 1) { nextX = x; nextY = y; }
+          step++;
+        });
+        const dx = nextX - this.x, dy = nextY - this.y;
+        if (dx !== 0 || dy !== 0) {
+          this.facingDx = dx;
+          this.facingDy = dy;
+          this.gs.tryMove(dx, dy, null, this);
+        }
+        break;
+      }
       case ActorState.Afraid: {
         this.actAfraid(this.gs);
         break;
@@ -242,6 +273,28 @@ export class Guard extends Actor {
 
         const dx = nextX - this.x;
         const dy = nextY - this.y;
+        if (dx !== 0 || dy !== 0) {
+          this.facingDx = dx;
+          this.facingDy = dy;
+          this.gs.tryMove(dx, dy, null, this);
+        }
+        break;
+      }
+      case ActorState.ReturningToPost: {
+        if (distance(this.x, this.y, this.guardPostX, this.guardPostY) === 0) {
+          this.state = ActorState.Guarding;
+          break;
+        }
+        const astar = new ROT.Path.AStar(this.guardPostX, this.guardPostY, (x, y) => {
+          const t = this.gs.map[`${x},${y}`];
+          return t !== undefined && TERRAIN_DEF[t].walkable;
+        }, { topology: 4 });
+        let step = 0, nextX = this.x, nextY = this.y;
+        astar.compute(this.x, this.y, (x, y) => {
+          if (step === 1) { nextX = x; nextY = y; }
+          step++;
+        });
+        const dx = nextX - this.x, dy = nextY - this.y;
         if (dx !== 0 || dy !== 0) {
           this.facingDx = dx;
           this.facingDy = dy;

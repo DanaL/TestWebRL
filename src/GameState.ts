@@ -147,7 +147,7 @@ export class GameState {
       const popup = new Popup("", "Cheese it! You've been spotted!", 3, 10, 32);
       this.game.pushPopup(popup);
       this.game.pushInputController(new InfoPopupController(this.game));
-      
+
       for (const mob of this.villagers) {
         if (mob.state !== ActorState.Afraid) {
           mob.stateBeforeAlert = mob.state;
@@ -158,11 +158,12 @@ export class GameState {
   }
 
   checkAngerSubsides(): void {
-    if (this.isAlerted && this.player.turnsSinceSeen > 5) {
+    if (this.isAlerted && this.player.turnsSinceSeen > 10) {
       this.isAlerted = false;      
       for (const mob of this.villagers) {
         if (mob.state === ActorState.Angry) {
           mob.state = mob.stateBeforeAlert;
+          mob.onAngerSubsides();
         }
       }
     }
