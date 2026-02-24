@@ -202,7 +202,7 @@ export class GameState {
       this.addMessage(`The ${item.name} disappears with a splash!`);
     } else {      
       if (item.name == "rock") {
-        this.handleNoise(targetX, targetY, 20);
+        this.rockLands(targetX, targetY, game);        
       } else if (item.name == "wasp's nest") {
         this.waspNestLands(targetX, targetY, game);
         return;
@@ -212,7 +212,19 @@ export class GameState {
     }    
   }
   
-  private waspNestLands(x: number, y: number, game: Game) {
+  private rockLands(x: number, y: number, game: Game): void {
+    this.handleNoise(x, y, 20);
+
+    for (let mob of this.villagers) {
+      if (mob.x === x && mob.y === y && mob.name === "wasp") {
+        this.addMessage("The rock smooshes the wasp!");
+        this.villagers = this.villagers.filter(v => v !== mob);
+        game.scheduler.remove(mob);
+      }
+    }
+  }
+
+  private waspNestLands(x: number, y: number, game: Game): void {
     let adj = adj8Locs(x, y);
     adj.push([x, y]);
     adj = ROT.RNG.shuffle(adj);

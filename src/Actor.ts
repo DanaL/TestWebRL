@@ -477,7 +477,7 @@ export class Wasp extends Actor {
         return;
 
       for (let actor of this.gs.villagers) {
-        if (actor.name !== "wasp" && actor.x == x && actor.y == y) {
+        if (actor.name !== "wasp" && actor.x === x && actor.y === y) {
           actor.becomeAfraid(this.x, this.y, this.gs);          
         }
       }
