@@ -85,7 +85,7 @@ export class Renderer {
       const sy = actor.y - camY;
       const fg = state.examinedLoc === loc ? "#000" : actor.colour;
       const bg = state.examinedLoc === loc ? "#cf8acb" : null;
-      cells[`${sx},${sy}`] = { glyph: '@', fg: fg, bg: bg, sx: sx, sy: sy };
+      cells[`${sx},${sy}`] = { glyph: actor.ch, fg: fg, bg: bg, sx: sx, sy: sy };
 
       for (const key of actor.attentionCone) {
         if (!state.visible[key])

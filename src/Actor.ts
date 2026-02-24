@@ -1,7 +1,7 @@
 import * as ROT from "rot-js";
 import type { GameState } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
-import { distance } from "./Utils";
+import { distance, adj8 } from "./Utils";
 
 const ActorState = {
   Idle: "Idle",
@@ -18,6 +18,7 @@ export { ActorState }
 export abstract class Actor {
   x: number;
   y: number;
+  ch: string = "@";
   colour: string;
   name: string;
   description: string = "";
@@ -279,11 +280,6 @@ export class Barfly extends Actor {
   }
 }
 
-const DIRS_8: [number, number][] = [
-  [1, 0], [-1, 0], [0, 1], [0, -1],
-  [1, 1], [-1, 1], [1, -1], [-1, -1],
-];
-
 export class Adventurer extends Actor {
   private static anyoneBarking = false;
 
@@ -301,7 +297,7 @@ export class Adventurer extends Actor {
   }
 
   act(): Promise<void> {
-    const d = DIRS_8[Math.floor(ROT.RNG.getUniform() * 8)];
+    const d = adj8[Math.floor(ROT.RNG.getUniform() * 8)];
     this.facingDx = d[0];
     this.facingDy = d[1];
     this.attentionCone = this.gs.computeAttentionCone(this);
@@ -328,6 +324,35 @@ export class Adventurer extends Actor {
         }
       }
     }
+
+    return Promise.resolve();
+  }
+}
+
+export class Wasp extends Actor {
+  private readonly gs: GameState;
+
+  constructor(x: number, y: number, state: GameState) {
+    super(x, y, "#ede19e", "wasp");
+    this.gs = state;
+    this.description = "An angry, buzzing wasp.";
+    this.ch = "I";
+  }
+
+  act(): Promise<void> {
+    let dx = 0;
+    let dy = 0;
+    const dir = Math.floor(ROT.RNG.getUniform() * 4);
+
+    switch (dir) {
+      case 0: dy = -1; break; // north
+      case 1: dy =  1; break; // south
+      case 2: dx =  1; break; // east
+      case 3: dx = -1; break; // west
+    }
+
+    // TODO: wasp will still kobold if they are adjacent and fright nearby non-wasp villagers
+    this.gs.tryMove(dx, dy, null, this);
 
     return Promise.resolve();
   }

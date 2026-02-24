@@ -15,6 +15,7 @@ export class Game {
   private popupStack: Popup[] = [];
   private inputQueue: KeyboardEvent[] = [];
   private engine: ROT.Engine;
+  readonly scheduler: Scheduler;
 
   constructor(state: GameState, renderer: Renderer) {
     this.state = state;
@@ -22,7 +23,8 @@ export class Game {
 
     let eggLocation = Math.floor(ROT.RNG.getUniform() * 3);
     eggLocation = 1;
-    const scheduler = new ROT.Scheduler.Simple();
+    this.scheduler = new ROT.Scheduler.Simple();
+    const scheduler = this.scheduler;
     scheduler.add(state.player, true);
 
     this.setupVillagers(scheduler, state, eggLocation);

@@ -39,3 +39,13 @@ export function indefArticle(s: string): string {
 
   return 'aeiouAEIOUyY'.includes(first) ? `an ${s}` : `a ${s}`;
 }
+
+export const adj8: [number, number][] = [
+  [-1, 0], [1, 0], [0, 1], [0, -1],
+  [-1, -1], [-1, 1], [1, -1], [1, 1]
+];
+
+export function adj8Locs(x: number, y: number): [number, number][] {
+  return adj8.map(([dx, dy]) => [x + dx, y + dy]);
+}
+

@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Actor } from "./Actor";
+import { Actor, Wasp } from "./Actor";
 import { Player } from "./Player";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
@@ -8,7 +8,7 @@ import { Item } from "./Item";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { loadMap } from "./MapLoader";
-import { bresenham } from "./Utils";
+import { bresenham, adj8Locs } from "./Utils";
 
 export class GameState {
   readonly width: number;
@@ -179,7 +179,7 @@ export class GameState {
     }
   }
 
-  async throwItem(item: Item, targetX: number, targetY: number): Promise<void> {
+  async throwItem(item: Item, targetX: number, targetY: number, game: Game): Promise<void> {
     const FRAME_MS = 50;
     let path: [number, number][] = [];
     for (const loc of bresenham(this.player.x, this.player.y, targetX, targetY).slice(1)) {
@@ -200,15 +200,43 @@ export class GameState {
     const terrain = this.map[loc];
     if (terrain == Terrain.Water) {
       this.addMessage(`The ${item.name} disappears with a splash!`);
-    } else {
-      item.x = targetX;
-      item.y = targetY;
-      this.items[loc] = item;
-      
+    } else {      
       if (item.name == "rock") {
         this.handleNoise(targetX, targetY, 20);
+      } else if (item.name == "wasp's nest") {
+        this.waspNestLands(targetX, targetY, game);
+        return;
       }
+
+      this.itemLands(targetX, targetY, loc, item);
     }    
+  }
+  
+  private waspNestLands(x: number, y: number, game: Game) {
+    let adj = adj8Locs(x, y);
+    adj.push([x, y]);
+    adj = ROT.RNG.shuffle(adj);
+
+    let i = 0;    
+    for (let j = 0; j < 3; j++) {
+      while (i < adj.length) {
+        const loc = adj[i];
+        const terrain = this.map[`${loc[0]},${loc[1]}`];
+        ++i;
+        if (!(this.occupied(loc[0], loc[1]) || terrain === undefined || !TERRAIN_DEF[terrain].walkable)) {
+          let wasp = new Wasp(loc[0], loc[1], this);
+          game.scheduler.add(wasp, true);
+          this.villagers.push(wasp);
+          break;
+        }        
+      }
+    }
+  }
+
+  private itemLands(x: number, y: number, loc: string, item: Item) {
+    item.x = x;
+    item.y = y;
+    this.items[loc] = item;
   }
 
   private handleNoise(x: number, y: number, radius: number): void {
