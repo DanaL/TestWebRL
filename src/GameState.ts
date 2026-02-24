@@ -126,7 +126,10 @@ export class GameState {
     actor.y = ny;
     if (actor instanceof Player && this.items[key]) {
       const item = this.items[key];
-      this.addMessage(`Picked up an item!`);
+      item.x = 0;
+      item.y = 0;
+      this.addMessage(`You pick up the ${item.name}.`);
+      this.player.inventory.push(item);
       delete this.items[key];
     }
   }
