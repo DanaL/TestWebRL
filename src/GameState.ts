@@ -137,6 +137,14 @@ export class GameState {
     return false;
   }
 
+  checkForDeath(game: Game): void {
+    if (!this.player.isAlive) {
+      const popup = new Popup("[#b45252 You have died!]", "A wasp has ended your adventure. Skittlebix will be most displeased.", 3, 10, 50);
+      game.pushPopup(popup);
+      game.pushInputController(new InfoPopupController(game, () => location.reload()));
+    }
+  }
+
   private checkForWin(game: Game | null): void {
     if (this.player.inventory.filter(i => i.name === "dragon egg").length > 0) {
       const popup = new Popup("[#cf8acb VICTORY!!]", `You have succeeded in retrieving [#b45252 Skittlebix]'s stolen egg!!\n\nSurely you will be praised as a brave and clever kobold, and won't be eaten by your dragon overlord.\n\nYou retrieved the egg in ${this.turn} turns.`, 3, 10, 50);
@@ -236,7 +244,7 @@ export class GameState {
         const terrain = this.map[`${loc[0]},${loc[1]}`];
         ++i;
         if (!(this.occupied(loc[0], loc[1]) || terrain === undefined || !TERRAIN_DEF[terrain].walkable)) {
-          let wasp = new Wasp(loc[0], loc[1], this, game.scheduler);
+          let wasp = new Wasp(loc[0], loc[1], this, game);
           game.scheduler.add(wasp, true);
           this.villagers.push(wasp);
           break;

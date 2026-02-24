@@ -1,5 +1,6 @@
 import * as ROT from "rot-js";
 import type { GameState } from "./GameState";
+import type { Game } from "./Game";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import { distance, adj8, adj8Locs } from "./Utils";
 
@@ -438,16 +439,16 @@ export class Adventurer extends Actor {
 
 export class Wasp extends Actor {
   private readonly gs: GameState;
+  private readonly game: Game;
   private duration: number;
-  private readonly scheduler: InstanceType<typeof ROT.Scheduler.Simple>;
-  
-  constructor(x: number, y: number, state: GameState, scheduler: InstanceType<typeof ROT.Scheduler.Simple>) {
+
+  constructor(x: number, y: number, state: GameState, game: Game) {
     super(x, y, "#ede19e", "wasp");
     this.gs = state;
+    this.game = game;
     this.description = "An angry, buzzing wasp.";
     this.ch = "I";
     this.duration = 5 + Math.floor(ROT.RNG.getUniform() * 3);
-    this.scheduler = scheduler;
   }
 
   act(): Promise<void> {
@@ -472,7 +473,8 @@ export class Wasp extends Actor {
     let stingPlayer = distance(this.x, this.y, this.gs.player.x, this.gs.player.y) <= 1;
     if (stingPlayer) {
       this.gs.addMessage("The wasp stings you!");
-      this.gs.player.health -= 1;
+      this.gs.player.takeDamage(1);
+      this.gs.checkForDeath(this.game);
     } else {
       // If we can't sting the player, do a random move    
       let dx = 0;
@@ -492,7 +494,7 @@ export class Wasp extends Actor {
     // Wasps disappear after a few turns
     if (--this.duration < 0) {
       this.gs.villagers = this.gs.villagers.filter(v => v !== this);
-      this.scheduler.remove(this);
+      this.game.scheduler.remove(this);
     }
 
     return Promise.resolve();
