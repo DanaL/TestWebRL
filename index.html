@@ -5,14 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TestWebRL</title>
     <style>
-      body { margin: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
+      body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
+      #layout { display: flex; flex-direction: row; align-items: flex-start; gap: 28px; }
+      #game-col { display: flex; flex-direction: column; align-items: center; }
       h1 { color: #aaa; font-family: monospace; margin: 0 0 8px 0; letter-spacing: 2px; }
       #app { border: 2px solid #888; }
+      #help { font-family: monospace; color: #aaa; margin-top: 32px; min-width: 180px; font-size: 1.2em; }
+      #help h2 { color: #ccc; font-size: 0.9em; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 12px 0; border-bottom: 1px solid #333; padding-bottom: 6px; }
+      #help table { border-collapse: collapse; width: 100%; }
+      #help tr { line-height: 1.8; }
+      #help td { vertical-align: top; }
+      #help .key { color: #b45252; padding-right: 12px; white-space: nowrap; }
+      #help .sep { border-top: 1px solid #222; height: 8px; }
     </style>
   </head>
   <body>
-    <h1>Snerk the Sneak</h1>
-    <div id="app"></div>
+    <div id="layout">
+      <div id="game-col">
+        <h1>Snerk the Sneak</h1>
+        <div id="app"></div>
+      </div>
+      <div id="help">
+        <h2>Commands</h2>
+        <table>
+          <tr><td class="key">Arrow keys or WASD</td><td>Move</td></tr>
+          <tr><td class="key"></td><td>(vi-keys work too!)</td></tr>
+          <tr><td class="key">Space / .</td><td>Wait a turn</td></tr>
+          <tr><td class="sep" colspan="2"></td></tr>
+          <tr><td class="key">i</td><td>Inventory</td></tr>
+          <tr><td class="key">t</td><td>Throw item</td></tr>
+          <tr><td class="key">x</td><td>Examine</td></tr>
+          <tr><td class="sep" colspan="2"></td></tr>
+          <tr><td class="key">Enter</td><td>Confirm</td></tr>
+          <tr><td class="key">Esc</td><td>Cancel</td></tr>
+        </table>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
