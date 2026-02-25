@@ -91,21 +91,7 @@ export abstract class Actor {
       if (this.fearTurnsLeft <= 0) {
         this.fleePhase = "return";
       } else {
-        const astar = new ROT.Path.AStar(this.fleeTargetX, this.fleeTargetY, (x, y) => {
-          const t = gs.map[`${x},${y}`];
-          return t !== undefined && TERRAIN_DEF[t].walkable;
-        }, { topology: 4 });
-        let step = 0, nextX = this.x, nextY = this.y;
-        astar.compute(this.x, this.y, (x, y) => {
-          if (step === 1) { nextX = x; nextY = y; }
-          step++;
-        });
-        const dx = nextX - this.x, dy = nextY - this.y;
-        if (dx !== 0 || dy !== 0) {
-          this.facingDx = dx;
-          this.facingDy = dy;
-          gs.tryMove(dx, dy, null, this);
-        }
+        this.moveToward(this.fleeTargetX, this.fleeTargetY, gs);
       }
     }
 
@@ -119,26 +105,48 @@ export abstract class Actor {
         }
         return;
       }
-      const astar = new ROT.Path.AStar(this.fleeReturnX, this.fleeReturnY, (x, y) => {
-        const t = gs.map[`${x},${y}`];
-        return t !== undefined && TERRAIN_DEF[t].walkable;
-      }, { topology: 4 });
-      let step = 0, nextX = this.x, nextY = this.y;
-      astar.compute(this.x, this.y, (x, y) => {
-        if (step === 1) { nextX = x; nextY = y; }
-        step++;
-      });
-      const dx = nextX - this.x, dy = nextY - this.y;
-      if (dx !== 0 || dy !== 0) {
-        this.facingDx = dx;
-        this.facingDy = dy;
-        gs.tryMove(dx, dy, null, this);
-      }
+      this.moveToward(this.fleeReturnX, this.fleeReturnY, gs);
     }
   }
 
   protected adjToPlayer(gs: GameState): boolean {
-    return distance(this.x, this.y, gs.player.x, gs.player.y) <= 1
+    return distance(this.x, this.y, gs.player.x, gs.player.y) <= 1;
+  }
+
+  protected moveToward(tx: number, ty: number, gs: GameState): void {
+    const astar = new ROT.Path.AStar(tx, ty, (x, y) => {
+      const t = gs.map[`${x},${y}`];
+      return t !== undefined && TERRAIN_DEF[t].walkable;
+    }, { topology: 4 });
+    let step = 0, nextX = this.x, nextY = this.y;
+    astar.compute(this.x, this.y, (x, y) => {
+      if (step === 1) { nextX = x; nextY = y; }
+      step++;
+    });
+    const dx = nextX - this.x, dy = nextY - this.y;
+    if (dx !== 0 || dy !== 0) {
+      this.facingDx = dx;
+      this.facingDy = dy;
+      gs.tryMove(dx, dy, null, this);
+    }
+  }
+
+  protected randomMove(gs: GameState): void {
+    const dirs: [number, number][] = [[0, -1], [0, 1], [1, 0], [-1, 0]];
+    const [dx, dy] = dirs[Math.floor(ROT.RNG.getUniform() * 4)];
+    this.facingDx = dx;
+    this.facingDy = dy;
+    const terrain = gs.map[`${this.x + dx},${this.y + dy}`];
+    if (terrain === Terrain.Floor) {
+      gs.tryMove(dx, dy, null, this);
+    }
+  }
+
+  protected checkPlayerSpotted(gs: GameState): void {
+    this.attentionCone = gs.computeAttentionCone(this);
+    if (this.attentionCone.has(`${gs.player.x},${gs.player.y}`)) {
+      gs.playerSpotted();
+    }
   }
 }
 
@@ -240,33 +248,10 @@ export class Guard extends Actor {
     [this.facingDx, this.facingDy] = this.rotatedFacing(this.rotDir * 20);
   }
 
-  private chasePlayer() {
-    const astar = new ROT.Path.AStar(this.gs.player.x, this.gs.player.y, (x, y) => {
-      const t = this.gs.map[`${x},${y}`];
-      return t !== undefined && TERRAIN_DEF[t].walkable;
-    }, { topology: 4 });
-
-    let step = 0, nextX = this.x, nextY = this.y;
-    astar.compute(this.x, this.y, (x, y) => {
-      if (step === 1) { nextX = x; nextY = y; }
-      step++;
-    });
-
-    const dx = nextX - this.x, dy = nextY - this.y;
-    if (dx !== 0 || dy !== 0) {
-      this.gs.tryMove(dx, dy, null, this);
-    }
-
-    this.facingDx = 0;
-    if (this.gs.player.x < this.x)
-      this.facingDx = -1;
-    else if (this.gs.player.x > this.x)
-      this.facingDx = 1;
-    this.facingDy = 0;
-    if (this.gs.player.y < this.y)
-      this.facingDy = -1;
-    else if (this.gs.player.y > this.y)
-      this.facingDy = 1;
+  private chasePlayer(): void {
+    this.moveToward(this.gs.player.x, this.gs.player.y, this.gs);
+    this.facingDx = Math.sign(this.gs.player.x - this.x);
+    this.facingDy = Math.sign(this.gs.player.y - this.y);
   }
 
   private investigate(): void {
@@ -287,26 +272,7 @@ export class Guard extends Actor {
       return;
     }
 
-    const astar = new ROT.Path.AStar(targetX, targetY, (x, y) => {
-      const t = this.gs.map[`${x},${y}`];
-      return t !== undefined && TERRAIN_DEF[t].walkable;
-    }, { topology: 4 });
-
-    let step = 0;
-    let nextX = this.x;
-    let nextY = this.y;
-    astar.compute(this.x, this.y, (x, y) => {
-      if (step === 1) { nextX = x; nextY = y; }
-      step++;
-    });
-
-    const dx = nextX - this.x;
-    const dy = nextY - this.y;
-    if (dx !== 0 || dy !== 0) {
-      this.facingDx = dx;
-      this.facingDy = dy;
-      this.gs.tryMove(dx, dy, null, this);
-    }
+    this.moveToward(targetX, targetY, this.gs);
   }
 
   private returnToPost(): void {
@@ -321,22 +287,7 @@ export class Guard extends Actor {
       return;
     }
 
-    const astar = new ROT.Path.AStar(this.guardPostX, this.guardPostY, (x, y) => {
-      const t = this.gs.map[`${x},${y}`];
-      return t !== undefined && TERRAIN_DEF[t].walkable;
-    }, { topology: 4 });
-
-    let step = 0, nextX = this.x, nextY = this.y;
-    astar.compute(this.x, this.y, (x, y) => {
-      if (step === 1) { nextX = x; nextY = y; }
-      step++;
-    });
-    const dx = nextX - this.x, dy = nextY - this.y;
-    if (dx !== 0 || dy !== 0) {
-      this.facingDx = dx;
-      this.facingDy = dy;
-      this.gs.tryMove(dx, dy, null, this);
-    }
+    this.moveToward(this.guardPostX, this.guardPostY, this.gs);
   }
 
   act(): Promise<void> {
@@ -367,11 +318,7 @@ export class Guard extends Actor {
         break;
     }
 
-    this.attentionCone = this.gs.computeAttentionCone(this);
-    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
-      this.gs.playerSpotted();
-    }
-
+    this.checkPlayerSpotted(this.gs);
     return Promise.resolve();
   }
 }
@@ -395,33 +342,8 @@ export class Barmaid extends Actor {
       return Promise.resolve();
     }
 
-    let dx = 0;
-    let dy = 0;
-    const dir = Math.floor(ROT.RNG.getUniform() * 4);
-
-    switch (dir) {
-      case 0: dy = -1; break; // north
-      case 1: dy =  1; break; // south
-      case 2: dx =  1; break; // east
-      case 3: dx = -1; break; // west
-    }
-
-    this.facingDx = dx;
-    this.facingDy = dy;
-
-    // Barmaid won't leave the tavern normally
-    const nx = this.x + dx;
-    const ny = this.y + dy;
-    const terrain = this.gs.map[`${nx},${ny}`];
-
-    if (terrain === Terrain.Floor) {
-      this.gs.tryMove(dx, dy, null, this);
-    }
-    
-    this.attentionCone = this.gs.computeAttentionCone(this);
-    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
-      this.gs.playerSpotted();
-    }
+    this.randomMove(this.gs);
+    this.checkPlayerSpotted(this.gs);
 
     if (this.barkDisplayTurns > 0) {
       this.barkDisplayTurns--;
@@ -472,42 +394,8 @@ export class Villager extends Actor {
       return Promise.resolve();
     }
 
-    let dx = 0;
-    let dy = 0;
-    const dir = Math.floor(ROT.RNG.getUniform() * 4);
-
-    switch (dir) {
-      case 0: // north
-        dy = -1; 
-        break; 
-      case 1: // south
-        dy =  1; 
-        break; 
-      case 2: // east
-        dx =  1; 
-        break; 
-      case 3: // west
-        dx = -1; 
-        break; 
-    }
-
-    this.facingDx = dx;
-    this.facingDy = dy;
-
-    // Villagers stick to whatever building they are in
-    const nx = this.x + dx;
-    const ny = this.y + dy;
-    const terrain = this.gs.map[`${nx},${ny}`];
-
-    if (terrain === Terrain.Floor) {
-      this.gs.tryMove(dx, dy, null, this);
-    }
-
-    this.attentionCone = this.gs.computeAttentionCone(this);
-    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
-      this.gs.playerSpotted();
-    }
-    
+    this.randomMove(this.gs);
+    this.checkPlayerSpotted(this.gs);
     return Promise.resolve();
   }
 }
@@ -538,10 +426,7 @@ export class Adventurer extends Actor {
     const d = adj8[Math.floor(ROT.RNG.getUniform() * 8)];
     this.facingDx = d[0];
     this.facingDy = d[1];
-    this.attentionCone = this.gs.computeAttentionCone(this);
-    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
-      this.gs.playerSpotted();
-    }
+    this.checkPlayerSpotted(this.gs);
 
     if (this.barkDisplayTurns > 0) {
       this.barkDisplayTurns--;
@@ -664,24 +549,7 @@ export class Cat extends Actor {
 
         return Promise.resolve();
       } else if (this.gs.visible[`${this.x},${this.y}`]) {
-        const astar = new ROT.Path.AStar(this.gs.player.x, this.gs.player.y, (x, y) => {
-          const t = this.gs.map[`${x},${y}`];
-          return t !== undefined && TERRAIN_DEF[t].walkable;
-        }, { topology: 4 });
-
-        let step = 0, nextX = this.x, nextY = this.y;
-        astar.compute(this.x, this.y, (x, y) => {
-          if (step === 1) { nextX = x; nextY = y; }
-          step++;
-        });
-
-        const dx = nextX - this.x, dy = nextY - this.y;
-        if (dx !== 0 || dy !== 0) {
-          this.facingDx = dx;
-          this.facingDy = dy;
-          this.gs.tryMove(dx, dy, null, this);
-        }
-
+        this.moveToward(this.gs.player.x, this.gs.player.y, this.gs);
         return Promise.resolve();
       }
 
@@ -689,37 +557,7 @@ export class Cat extends Actor {
       this.state = ActorState.Idle;
     }
 
-    let dx = 0;
-    let dy = 0;
-    const dir = Math.floor(ROT.RNG.getUniform() * 4);
-
-    switch (dir) {
-      case 0: // north
-        dy = -1; 
-        break; 
-      case 1: // south
-        dy =  1; 
-        break; 
-      case 2: // east
-        dx =  1; 
-        break; 
-      case 3: // west
-        dx = -1; 
-        break; 
-    }
-
-    this.facingDx = dx;
-    this.facingDy = dy;
-
-    // Villagers stick to whatever building they are in
-    const nx = this.x + dx;
-    const ny = this.y + dy;
-    const terrain = this.gs.map[`${nx},${ny}`];
-
-    if (terrain === Terrain.Floor) {
-      this.gs.tryMove(dx, dy, null, this);
-    }
-
+    this.randomMove(this.gs);
     this.attentionCone = this.gs.computeAttentionCone(this);
     if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
       this.gs.addMessage("The cat hisses angrily");
