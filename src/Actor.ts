@@ -453,7 +453,7 @@ export class Barmaid extends Actor {
   }
 }
 
-export class Barfly extends Actor {
+export class Villager extends Actor {
   private readonly gs: GameState;
   
   constructor(x: number, y: number, colour: string, name: string, state: GameState) {
@@ -474,16 +474,24 @@ export class Barfly extends Actor {
     const dir = Math.floor(ROT.RNG.getUniform() * 4);
 
     switch (dir) {
-      case 0: dy = -1; break; // north
-      case 1: dy =  1; break; // south
-      case 2: dx =  1; break; // east
-      case 3: dx = -1; break; // west
+      case 0: // north
+        dy = -1; 
+        break; 
+      case 1: // south
+        dy =  1; 
+        break; 
+      case 2: // east
+        dx =  1; 
+        break; 
+      case 3: // west
+        dx = -1; 
+        break; 
     }
 
     this.facingDx = dx;
     this.facingDy = dy;
 
-    // Barfly won't leave the tavern normally
+    // Villagers stick to whatever building they are in
     const nx = this.x + dx;
     const ny = this.y + dy;
     const terrain = this.gs.map[`${nx},${ny}`];

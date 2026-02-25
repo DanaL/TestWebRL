@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Guard, Adventurer, Barmaid, Barfly, ActorState } from "./Actor";
+import { Guard, Adventurer, Barmaid, Villager, ActorState } from "./Actor";
 import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 import { InputController } from "./InputController";
@@ -148,10 +148,15 @@ export class Game {
     scheduler.add(barmaid, true);
     this.state.villagers.push(barmaid);
 
-    let barfly1 = new Barfly(95, 18, "#4b80ca", "Barfly", gs);
+    let barfly1 = new Villager(95, 18, "#4b80ca", "Barfly", gs);
     barfly1.description = "Another stinky human.";
     scheduler.add(barfly1, true);
     this.state.villagers.push(barfly1);
+
+    let priest = new Villager(161, 6, "#6a536e", "Priest", gs);
+    priest.description = "This stinky human is wearing a fancy-looking necklace.";
+    scheduler.add(priest, true);
+    this.state.villagers.push(priest);
   }
 
   pushInputController(controller: InputController): void {
