@@ -173,8 +173,8 @@ export class GameState {
   checkForDeath(killedBy: string): void {
     if (!this.player.isAlive) {
       const msg = killedBy === "wasp"
-        ? "A wasp has ended your mission. Skittlebix will be most displeased."
-        : "You have been slain by a guard. Skittlebix's egg will most likely be poached by some human lord."
+        ? "A wasp has ended your mission. [#b45252 Skittlebix] will be most displeased.\n\nTap any key to play again!"
+        : "You have been slain by a guard. [#b45252 Skittlebix]'s egg will most likely be poached by some human lord.\n\nTap any key to play again!"
       const popup = new Popup("[#b45252 You have died!]", msg, 3, 10, 50);
       this.game.pushPopup(popup);
       this.game.pushInputController(new InfoPopupController(this.game, () => location.reload()));
@@ -183,9 +183,9 @@ export class GameState {
 
   private checkForWin(game: Game | null): void {
     if (this.player.inventory.filter(i => i.name === "dragon egg").length > 0) {
-      const popup = new Popup("[#cf8acb VICTORY!!]", `You have succeeded in retrieving [#b45252 Skittlebix]'s stolen egg!!\n\nSurely you will be praised as a brave and clever kobold, and won't be eaten by your dragon overlord.\n\nYou retrieved the egg in ${this.turn} turns.`, 3, 10, 50);
+      const popup = new Popup("[#cf8acb VICTORY!!]", `You have succeeded in retrieving [#b45252 Skittlebix]'s stolen egg!!\n\nSurely you will be praised as a brave and clever kobold, and won't be eaten by your dragon overlord.\n\nYou retrieved the egg in ${this.turn} turns.\n\nTap any key to play again!`, 3, 10, 50);
       game!.pushPopup(popup);
-      game!.pushInputController(new InfoPopupController(game!));
+      game!.pushInputController(new InfoPopupController(game!, () => location.reload()));
     } else {
       const popup = new Popup("", "You need to return with the stolen egg or risk the wrath of [#b45252 Skittlebix]!", 3, 10, 50);
       game!.pushPopup(popup);
