@@ -143,6 +143,16 @@ export abstract class Actor {
   }
 
   protected checkPlayerSpotted(gs: GameState): void {
+    // if Snerk is wearing the cloak, villagers and adventurers may not
+    // realize he's a kobold
+    if ((this instanceof Villager) || (this instanceof Adventurer)) {
+      for (const item of gs.player.inventory) {
+        if (item.name == "tattered cloak" && ROT.RNG.getPercentage() <= 75) {
+          return;
+        }
+      }
+    }
+
     this.attentionCone = gs.computeAttentionCone(this);
     if (this.attentionCone.has(`${gs.player.x},${gs.player.y}`)) {
       gs.playerSpotted();

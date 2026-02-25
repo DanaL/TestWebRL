@@ -30,6 +30,7 @@ export class Game {
 
     this.setupVillagers(scheduler, state, eggLocation);
     this.placeEgg(state, eggLocation);
+    this.placeCloak(state);
 
     scheduler.add({ act: () => { state.turn++; state.checkAngerSubsides(); return Promise.resolve(); } }, true);
 
@@ -38,8 +39,8 @@ export class Game {
   }
 
   private placeEgg(state: GameState, eggLocation: number): void {
-    let x: number;
-    let y: number;
+    let x: number, y: number;
+
     switch (eggLocation) {
       case 0: // alchemist        
         x = 134;
@@ -57,6 +58,15 @@ export class Game {
 
     let egg = new Item(x, y, "dragon egg", "A leathery egg emanating warmth and a faint glow.", "O", "#f2f0e5");
     state.items[`${x},${y}`] = egg;
+  }
+
+  private placeCloak(state: GameState): void {
+    const options: [number, number][] = [[91, 7], [117, 14], [135, 4], [149, 21]];
+    let x: number, y:number;
+    [x, y] = options[Math.floor(ROT.RNG.getUniform() * 4)];
+
+    let cloak = new Item(x, y, "tattered cloak", "If you wear this, the dumber humans might not recognize you.", "(", "#a77b5b");
+    state.items[`${x},${y}`] = cloak;
   }
 
   private setupVillagers(scheduler: Scheduler, gs: GameState, eggLocation: number): void {    
