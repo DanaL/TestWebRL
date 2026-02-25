@@ -264,6 +264,9 @@ export class GameState {
         this.addMessage("The rock smooshes the wasp!");
         this.villagers = this.villagers.filter(v => v !== mob);
         game.scheduler.remove(mob);
+      } else if (mob.x === x && mob.y === y && mob.name === "Cat") {
+        this.addMessage("The cat howls!");
+        mob.becomeAfraid(this.player.x, this.player.y, this);
       }
     }
   }

@@ -529,7 +529,7 @@ export class Cat extends Actor {
     this.ch = 'f';
     this.description = "A fuzzy little monster with sharp-looking teeth and claws.";
     this.gs = state;
-    this.attentionRadius = 3;
+    this.attentionRadius = 4;
   }
 
   act(): Promise<void> {
