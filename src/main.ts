@@ -4,6 +4,7 @@ import { Game } from "./Game";
 import { InfoPopupController } from "./InputController";
 import { PlayerCommandController } from "./PlayerCommandController";
 import { Popup } from "./Popup";
+import { setupWorld } from "./SnerkSetup";
 
 const WIDTH = 80;
 const MAP_ROWS = 32;
@@ -15,6 +16,8 @@ state.fovRadius = Math.ceil(Math.hypot(WIDTH / 2, MAP_ROWS / 2));
 const renderer = new Renderer(WIDTH, DISPLAY_HEIGHT, 18);
 const game = new Game(state, renderer);
 
+setupWorld(game);
+
 document.getElementById("app")!.appendChild(renderer.getContainer());
 
 game.pushInputController(new PlayerCommandController(game));
@@ -24,6 +27,7 @@ const popup = new Popup("[#8ab060 Welcome to Snerk the Sneak!!]", "You are a sma
 game.pushPopup(popup);
 game.pushInputController(new InfoPopupController(game));
 game.state.computeFov();
+game.start();
 
 window.addEventListener("keydown", (e) => { if (e.key === "Tab") e.preventDefault(); game.queueInput(e); });
 
