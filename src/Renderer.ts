@@ -149,14 +149,12 @@ export class Renderer {
   drawUi(state: GameState): void {
     let col = 1;
 
+    for (const ch of "Health: ") {
+      this.display.draw(col++, 0, ch, "#f2f0e5", "#111");
+    }
     for (let i = 0; i < state.player.maxHealth; i++) {
       const filled = i < state.player.health;
       this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#b45252" : "#500", "#111");
-    }
-
-    const rest = `  Turn: ${state.turn}  ${state.player.y},${state.player.x}`;
-    for (let i = 0; i < Math.min(rest.length, this.width - col); i++) {
-      this.display.draw(col++, 0, rest[i], "#aaa", "#111");
     }
 
     // Write message log
