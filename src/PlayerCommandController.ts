@@ -33,7 +33,7 @@ export class PlayerCommandController extends InputController {
         this.game.state.addMessage("You have nothing to throw.");
         return;
       }
-      const menu = new InventoryMenu("Throw what?", "You have nothing to throw.", inv, 3, 10);
+      const menu = new InventoryMenu("Throw what?", "You have nothing to throw.", inv, 3, 10, false);
       this.game.pushPopup(menu);
       this.game.pushInputController(new ThrowMenuController(menu, this.game));
       return;

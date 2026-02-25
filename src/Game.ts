@@ -65,7 +65,7 @@ export class Game {
     let x: number, y:number;
     [x, y] = options[Math.floor(ROT.RNG.getUniform() * 4)];
 
-    let cloak = new Item(x, y, "tattered cloak", "If you wear this, the dumber humans might not recognize you.", "(", "#a77b5b");
+    let cloak = new Item(x, y, "tattered cloak", "While wearing this, the dumber humans might not recognize you.", "(", "#a77b5b");
     state.items[`${x},${y}`] = cloak;
   }
 
