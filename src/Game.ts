@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Guard, Adventurer, Barmaid, Villager, ActorState } from "./Actor";
+import { Guard, Adventurer, Barmaid, Villager, ActorState, Cat } from "./Actor";
 import { GameState } from "./GameState";
 import { Renderer } from "./Renderer";
 import { InputController } from "./InputController";
@@ -157,6 +157,15 @@ export class Game {
     priest.description = "This stinky human is wearing a fancy-looking necklace.";
     scheduler.add(priest, true);
     this.state.villagers.push(priest);
+
+    let alchemist = new Villager(130, 32, "#cf8acb", "Alchemist", gs);
+    alchemist.description = "This stinky human smells like chemicals and duckweed.";
+    scheduler.add(alchemist, true);
+    this.state.villagers.push(alchemist);
+
+    let familiar = new Cat(132, 34, gs);
+    scheduler.add(familiar, true);
+    this.state.villagers.push(familiar);
   }
 
   pushInputController(controller: InputController): void {

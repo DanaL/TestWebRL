@@ -136,6 +136,10 @@ export abstract class Actor {
       }
     }
   }
+
+  protected adjToPlayer(gs: GameState): boolean {
+    return distance(this.x, this.y, gs.player.x, gs.player.y) <= 1
+  }
 }
 
 export class Guard extends Actor {
@@ -344,8 +348,7 @@ export class Guard extends Actor {
         this.guarding();
         break;
       case ActorState.Angry:
-        let adjToPlayer = distance(this.x, this.y, this.gs.player.x, this.gs.player.y) <= 1;
-        if (adjToPlayer) {
+        if (this.adjToPlayer(this.gs)) {
           this.gs.addMessage("The guard hits you!");
           this.gs.player.takeDamage(1);
           this.gs.checkForDeath("guard");
@@ -603,8 +606,7 @@ export class Wasp extends Actor {
     });
 
     // Can we sting the player?
-    let stingPlayer = distance(this.x, this.y, this.gs.player.x, this.gs.player.y) <= 1;
-    if (stingPlayer) {
+    if (this.adjToPlayer(this.gs)) {
       this.gs.addMessage("The wasp stings you!");
       this.gs.player.takeDamage(1);
       this.gs.checkForDeath("wasp");
@@ -630,6 +632,100 @@ export class Wasp extends Actor {
       this.game.scheduler.remove(this);
     }
 
+    return Promise.resolve();
+  }
+}
+
+export class Cat extends Actor {
+  private readonly gs: GameState;
+  
+  constructor(x: number, y: number, state: GameState) {
+    super(x, y, "#d3a068", "Cat");
+    this.ch = 'f';
+    this.description = "A fuzzy little monster with sharp-looking teeth and claws.";
+    this.gs = state;
+    this.attentionRadius = 3;
+  }
+
+  act(): Promise<void> {
+    if (this.state === ActorState.Afraid) {
+      this.actAfraid(this.gs);
+      this.attentionCone = this.gs.computeAttentionCone(this);
+
+      return Promise.resolve();
+    }
+    else if (this.state === ActorState.Angry) {
+      this.attentionCone = this.gs.computeAttentionCone(this);
+
+      if (this.adjToPlayer(this.gs)) {
+        this.gs.addMessage("The cat bites you!");
+        this.gs.player.takeDamage(1);
+        this.gs.checkForDeath("cat");
+
+        return Promise.resolve();
+      } else if (this.gs.visible[`${this.x},${this.y}`]) {
+        const astar = new ROT.Path.AStar(this.gs.player.x, this.gs.player.y, (x, y) => {
+          const t = this.gs.map[`${x},${y}`];
+          return t !== undefined && TERRAIN_DEF[t].walkable;
+        }, { topology: 4 });
+
+        let step = 0, nextX = this.x, nextY = this.y;
+        astar.compute(this.x, this.y, (x, y) => {
+          if (step === 1) { nextX = x; nextY = y; }
+          step++;
+        });
+
+        const dx = nextX - this.x, dy = nextY - this.y;
+        if (dx !== 0 || dy !== 0) {
+          this.facingDx = dx;
+          this.facingDy = dy;
+          this.gs.tryMove(dx, dy, null, this);
+        }
+
+        return Promise.resolve();
+      }
+
+      // If an angry cat can't see the player, they return to idle
+      this.state = ActorState.Idle;
+    }
+
+    let dx = 0;
+    let dy = 0;
+    const dir = Math.floor(ROT.RNG.getUniform() * 4);
+
+    switch (dir) {
+      case 0: // north
+        dy = -1; 
+        break; 
+      case 1: // south
+        dy =  1; 
+        break; 
+      case 2: // east
+        dx =  1; 
+        break; 
+      case 3: // west
+        dx = -1; 
+        break; 
+    }
+
+    this.facingDx = dx;
+    this.facingDy = dy;
+
+    // Villagers stick to whatever building they are in
+    const nx = this.x + dx;
+    const ny = this.y + dy;
+    const terrain = this.gs.map[`${nx},${ny}`];
+
+    if (terrain === Terrain.Floor) {
+      this.gs.tryMove(dx, dy, null, this);
+    }
+
+    this.attentionCone = this.gs.computeAttentionCone(this);
+    if (this.attentionCone.has(`${this.gs.player.x},${this.gs.player.y}`)) {
+      this.gs.addMessage("The cat hisses angrily");
+      this.state = ActorState.Angry;
+    }
+    
     return Promise.resolve();
   }
 }
