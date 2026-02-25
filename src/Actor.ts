@@ -2,7 +2,7 @@ import * as ROT from "rot-js";
 import type { GameState } from "./GameState";
 import type { Game } from "./Game";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
-import { distance, adj8, adj8Locs } from "./Utils";
+import { distance, adj8 } from "./Utils";
 
 const ActorState = {
   Idle: "Idle",
@@ -39,7 +39,7 @@ export abstract class Actor {
   fleeTargetY: number = 0;
   fleeReturnX: number = 0;
   fleeReturnY: number = 0;
-  prevStateBeforeFear: ActorState = ActorState.Idle;
+  stateBeforeFear: ActorState = ActorState.Idle;
   stateBeforeAlert: ActorState = ActorState.Idle;
 
   constructor(x: number, y: number, colour: string, name: string) {
@@ -59,13 +59,14 @@ export abstract class Actor {
       return;
 
     gs.addMessage(`The ${this.name} becomes frightened!`);
-    this.prevStateBeforeFear = this.state;
+    this.stateBeforeFear = this.state;
     this.fleeReturnX = this.x;
     this.fleeReturnY = this.y;
     this.fearX = fearX;
     this.fearY = fearY;
     this.fearTurnsLeft = 50 + Math.floor(ROT.RNG.getUniform() * 6);
     this.fleePhase = "flee";
+
     // Project a flee target 20 tiles away in the direction opposite to the fear source
     const awayDx = this.x - fearX;
     const awayDy = this.y - fearY;
@@ -77,6 +78,7 @@ export abstract class Actor {
       this.fleeTargetX = this.x + 20;
       this.fleeTargetY = this.y;
     }
+
     this.fleeTargetX = Math.max(0, Math.min(gs.width - 1, this.fleeTargetX));
     this.fleeTargetY = Math.max(0, Math.min(gs.height - 1, this.fleeTargetY));
     this.state = ActorState.Afraid;
@@ -109,7 +111,12 @@ export abstract class Actor {
 
     if (this.fleePhase === "return") {
       if (distance(this.x, this.y, this.fleeReturnX, this.fleeReturnY) === 0) {
-        this.state = this.prevStateBeforeFear;
+        if (this.stateBeforeFear === ActorState.Angry && !gs.isAlerted) {
+          this.state = this.stateBeforeAlert;
+          this.onAngerSubsides();
+        } else {
+          this.state = this.stateBeforeFear;
+        }
         return;
       }
       const astar = new ROT.Path.AStar(this.fleeReturnX, this.fleeReturnY, (x, y) => {
@@ -158,7 +165,7 @@ export class Guard extends Actor {
   }
 
   override onAngerSubsides(): void {
-    if (this.stateBeforeAlert === ActorState.Guarding) {
+    if (this.stateBeforeAlert === ActorState.Guarding || this.stateBeforeAlert === ActorState.Patrolling) {
       this.state = ActorState.ReturningToPost;
     }
   }
@@ -206,6 +213,16 @@ export class Guard extends Actor {
         const side = ROT.RNG.getUniform() < 0.5 ? 1 : -1;
         [this.facingDx, this.facingDy] = this.rotatedFacing(20 * side);
       }
+    }
+  }
+
+  private snapFacingFromWall(): void {
+    for (let i = 0; i < 18; i++) {
+      const nx = this.x + Math.round(this.facingDx);
+      const ny = this.y + Math.round(this.facingDy);
+      const terrain = this.gs.map[`${nx},${ny}`];
+      if (terrain === undefined || !TERRAIN_DEF[terrain].opaque) break;
+      [this.facingDx, this.facingDy] = this.rotatedFacing(this.rotDir * 20);
     }
   }
 
@@ -290,7 +307,13 @@ export class Guard extends Actor {
 
   private returnToPost(): void {
     if (distance(this.x, this.y, this.guardPostX, this.guardPostY) === 0) {
-      this.state = ActorState.Guarding;
+      if (this.patrolPath.length > 0) {
+        this.patrolIndex = 0;
+        this.state = ActorState.Patrolling;
+      } else {
+        this.snapFacingFromWall();
+        this.state = ActorState.Guarding;
+      }
       return;
     }
 
