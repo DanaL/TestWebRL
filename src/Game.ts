@@ -152,11 +152,6 @@ export class Game {
     barfly1.description = "Another stinky human.";
     scheduler.add(barfly1, true);
     this.state.villagers.push(barfly1);
-
-    let barfly2 = new Barfly(104, 23, "#4b80ca", "Barfly", gs);
-    barfly2.description = "Another stinky human.";
-    scheduler.add(barfly2, true);
-    this.state.villagers.push(barfly2);
   }
 
   pushInputController(controller: InputController): void {
