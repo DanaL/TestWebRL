@@ -185,54 +185,136 @@ export class Guard extends Actor {
     ];
   }
 
+  private patrol(): void {
+    if (this.patrolPath.length === 0) 
+      return;
+    
+    const [tx, ty] = this.patrolPath[this.patrolIndex];
+    const dx = Math.sign(tx - this.x);
+    const dy = Math.sign(ty - this.y);
+    this.gs.tryMove(dx, dy, null, this);
+
+    if (this.x === tx && this.y === ty) {
+      this.patrolIndex = (this.patrolIndex + 1) % this.patrolPath.length;
+    }
+
+    // Face direction of travel, but 1-in-3 chance to glance left or right
+    if (dx !== 0 || dy !== 0) {
+      this.facingDx = dx;
+      this.facingDy = dy;
+      if (ROT.RNG.getUniform() < 1/3) {
+        const side = ROT.RNG.getUniform() < 0.5 ? 1 : -1;
+        [this.facingDx, this.facingDy] = this.rotatedFacing(20 * side);
+      }
+    }
+  }
+
+  private guarding(): void {
+    // Preview the candidate facing; reverse scan direction if it hits a wall
+    const [testDx, testDy] = this.rotatedFacing(this.rotDir * 20);
+    const terrain = this.gs.map[`${this.x + Math.round(testDx)},${this.y + Math.round(testDy)}`];
+    if (terrain !== undefined && TERRAIN_DEF[terrain].opaque) {
+      this.rotDir *= -1;
+    }
+    [this.facingDx, this.facingDy] = this.rotatedFacing(this.rotDir * 20);
+  }
+
+  private chasePlayer() {
+    const astar = new ROT.Path.AStar(this.gs.player.x, this.gs.player.y, (x, y) => {
+      const t = this.gs.map[`${x},${y}`];
+      return t !== undefined && TERRAIN_DEF[t].walkable;
+    }, { topology: 4 });
+
+    let step = 0, nextX = this.x, nextY = this.y;
+    astar.compute(this.x, this.y, (x, y) => {
+      if (step === 1) { nextX = x; nextY = y; }
+      step++;
+    });
+
+    const dx = nextX - this.x, dy = nextY - this.y;
+    if (dx !== 0 || dy !== 0) {
+      this.facingDx = dx;
+      this.facingDy = dy;
+      this.gs.tryMove(dx, dy, null, this);
+    }
+  }
+
+  private investigate(): void {
+    const [targetX, targetY] = this.investigatePhase === "goto"
+          ? [this.investigateX, this.investigateY]
+          : [this.returnX, this.returnY];
+
+    const dist = distance(this.x, this.y, targetX, targetY);
+    const arrived = this.investigatePhase === "goto" ? dist <= 1 : dist === 0;
+
+    if (arrived) {
+      if (this.investigatePhase === "goto") {
+        this.gs.addMessage(`The ${this.name} says, "Hmmm."`);
+        this.investigatePhase = "return";
+      } else {
+        this.state = this.prevState;
+      }
+      return;
+    }
+
+    const astar = new ROT.Path.AStar(targetX, targetY, (x, y) => {
+      const t = this.gs.map[`${x},${y}`];
+      return t !== undefined && TERRAIN_DEF[t].walkable;
+    }, { topology: 4 });
+
+    let step = 0;
+    let nextX = this.x;
+    let nextY = this.y;
+    astar.compute(this.x, this.y, (x, y) => {
+      if (step === 1) { nextX = x; nextY = y; }
+      step++;
+    });
+
+    const dx = nextX - this.x;
+    const dy = nextY - this.y;
+    if (dx !== 0 || dy !== 0) {
+      this.facingDx = dx;
+      this.facingDy = dy;
+      this.gs.tryMove(dx, dy, null, this);
+    }
+  }
+
+  private returnToPost(): void {
+    if (distance(this.x, this.y, this.guardPostX, this.guardPostY) === 0) {
+      this.state = ActorState.Guarding;
+      return;
+    }
+
+    const astar = new ROT.Path.AStar(this.guardPostX, this.guardPostY, (x, y) => {
+      const t = this.gs.map[`${x},${y}`];
+      return t !== undefined && TERRAIN_DEF[t].walkable;
+    }, { topology: 4 });
+
+    let step = 0, nextX = this.x, nextY = this.y;
+    astar.compute(this.x, this.y, (x, y) => {
+      if (step === 1) { nextX = x; nextY = y; }
+      step++;
+    });
+    const dx = nextX - this.x, dy = nextY - this.y;
+    if (dx !== 0 || dy !== 0) {
+      this.facingDx = dx;
+      this.facingDy = dy;
+      this.gs.tryMove(dx, dy, null, this);
+    }
+  }
+
   act(): Promise<void> {
     switch (this.state) {
       case ActorState.Patrolling: {
-        if (this.patrolPath.length === 0) break;
-        const [tx, ty] = this.patrolPath[this.patrolIndex];
-        const dx = Math.sign(tx - this.x);
-        const dy = Math.sign(ty - this.y);
-        this.gs.tryMove(dx, dy, null, this);
-        if (this.x === tx && this.y === ty) {
-          this.patrolIndex = (this.patrolIndex + 1) % this.patrolPath.length;
-        }
-        // Face direction of travel, but 1-in-3 chance to glance left or right
-        if (dx !== 0 || dy !== 0) {
-          this.facingDx = dx;
-          this.facingDy = dy;
-          if (ROT.RNG.getUniform() < 1/3) {
-            const side = ROT.RNG.getUniform() < 0.5 ? 1 : -1;
-            [this.facingDx, this.facingDy] = this.rotatedFacing(20 * side);
-          }
-        }
+        this.patrol();
         break;
       }
       case ActorState.Guarding: {
-        // Preview the candidate facing; reverse scan direction if it hits a wall
-        const [testDx, testDy] = this.rotatedFacing(this.rotDir * 20);
-        const terrain = this.gs.map[`${this.x + Math.round(testDx)},${this.y + Math.round(testDy)}`];
-        if (terrain !== undefined && TERRAIN_DEF[terrain].opaque) {
-          this.rotDir *= -1;
-        }
-        [this.facingDx, this.facingDy] = this.rotatedFacing(this.rotDir * 20);
+        this.guarding();
         break;
       }
       case ActorState.Angry: {
-        const astar = new ROT.Path.AStar(this.gs.player.x, this.gs.player.y, (x, y) => {
-          const t = this.gs.map[`${x},${y}`];
-          return t !== undefined && TERRAIN_DEF[t].walkable;
-        }, { topology: 4 });
-        let step = 0, nextX = this.x, nextY = this.y;
-        astar.compute(this.x, this.y, (x, y) => {
-          if (step === 1) { nextX = x; nextY = y; }
-          step++;
-        });
-        const dx = nextX - this.x, dy = nextY - this.y;
-        if (dx !== 0 || dy !== 0) {
-          this.facingDx = dx;
-          this.facingDy = dy;
-          this.gs.tryMove(dx, dy, null, this);
-        }
+        this.chasePlayer();
         break;
       }
       case ActorState.Afraid: {
@@ -240,66 +322,11 @@ export class Guard extends Actor {
         break;
       }
       case ActorState.Investigating: {
-        const [targetX, targetY] = this.investigatePhase === "goto"
-          ? [this.investigateX, this.investigateY]
-          : [this.returnX, this.returnY];
-
-        const dist = distance(this.x, this.y, targetX, targetY);
-        const arrived = this.investigatePhase === "goto" ? dist <= 1 : dist === 0;
-
-        if (arrived) {
-          if (this.investigatePhase === "goto") {
-            this.gs.addMessage(`The ${this.name} says, "Hmmm."`);
-            this.investigatePhase = "return";
-          } else {
-            this.state = this.prevState;
-          }
-          break;
-        }
-
-        // Use A* to find next step toward target
-        const astar = new ROT.Path.AStar(targetX, targetY, (x, y) => {
-          const t = this.gs.map[`${x},${y}`];
-          return t !== undefined && TERRAIN_DEF[t].walkable;
-        }, { topology: 4 });
-
-        let step = 0;
-        let nextX = this.x;
-        let nextY = this.y;
-        astar.compute(this.x, this.y, (x, y) => {
-          if (step === 1) { nextX = x; nextY = y; }
-          step++;
-        });
-
-        const dx = nextX - this.x;
-        const dy = nextY - this.y;
-        if (dx !== 0 || dy !== 0) {
-          this.facingDx = dx;
-          this.facingDy = dy;
-          this.gs.tryMove(dx, dy, null, this);
-        }
+        this.investigate();
         break;
       }
       case ActorState.ReturningToPost: {
-        if (distance(this.x, this.y, this.guardPostX, this.guardPostY) === 0) {
-          this.state = ActorState.Guarding;
-          break;
-        }
-        const astar = new ROT.Path.AStar(this.guardPostX, this.guardPostY, (x, y) => {
-          const t = this.gs.map[`${x},${y}`];
-          return t !== undefined && TERRAIN_DEF[t].walkable;
-        }, { topology: 4 });
-        let step = 0, nextX = this.x, nextY = this.y;
-        astar.compute(this.x, this.y, (x, y) => {
-          if (step === 1) { nextX = x; nextY = y; }
-          step++;
-        });
-        const dx = nextX - this.x, dy = nextY - this.y;
-        if (dx !== 0 || dy !== 0) {
-          this.facingDx = dx;
-          this.facingDy = dy;
-          this.gs.tryMove(dx, dy, null, this);
-        }
+        this.returnToPost();
         break;
       }
     }
