@@ -159,7 +159,7 @@ export class GameState {
   }
 
   checkAngerSubsides(): void {
-    if (this.isAlerted && this.player.turnsSinceSeen > 10) {
+    if (this.isAlerted && this.player.turnsSinceSeen > 15) {
       this.isAlerted = false;      
       for (const mob of this.villagers) {
         if (mob.state === ActorState.Angry) {
