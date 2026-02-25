@@ -20,7 +20,7 @@ document.getElementById("app")!.appendChild(renderer.getContainer());
 game.pushInputController(new PlayerCommandController(game));
 
 // Greetings pop-up
-const popup = new Popup("[#8ab060 Welcome to Snerk the Sneak!!]", "This is just a tech demo for a web-based game I plan to make for the 2026 7DRL.\n\nMove around with the [#6a536e arrow keys] or [#6a536e WASD]\n\nSteal back the dragon egg from the filthy humans and return it to your cave (the [#68c2d3 >])!", 3, 10, 50);
+const popup = new Popup("[#8ab060 Welcome to Snerk the Sneak!!]", "You are a small, hapless kobold tasked with sneaking into the nearby village to steal back an egg that belongs to your dragon overload! The egg was stolen by very rude adventurers and [#b45252 Skittlebix] demands its return. Be steathly, avoid the humans and return to your cave (the [#68c2d3 >]).\n\nMove around with the [#6a536e arrow keys] or [#6a536e WASD]\n\n([#6a536e i]) shows your inventory\n([#6a536e t]) lets you throw an item\n([#6a536e x]) to get info on items and creatures", 3, 10, 50);
 game.pushPopup(popup);
 game.pushInputController(new InfoPopupController(game));
 game.state.computeFov();
