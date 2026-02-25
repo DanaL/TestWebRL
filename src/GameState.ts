@@ -170,9 +170,12 @@ export class GameState {
     }
   }
 
-  checkForDeath(): void {
+  checkForDeath(killedBy: string): void {
     if (!this.player.isAlive) {
-      const popup = new Popup("[#b45252 You have died!]", "A wasp has ended your adventure. Skittlebix will be most displeased.", 3, 10, 50);
+      const msg = killedBy === "wasp"
+        ? "A wasp has ended your mission. Skittlebix will be most displeased."
+        : "You have been slain by a guard. Skittlebix's egg will most likely be poached by some human lord."
+      const popup = new Popup("[#b45252 You have died!]", msg, 3, 10, 50);
       this.game.pushPopup(popup);
       this.game.pushInputController(new InfoPopupController(this.game, () => location.reload()));
     }

@@ -337,30 +337,31 @@ export class Guard extends Actor {
 
   act(): Promise<void> {
     switch (this.state) {
-      case ActorState.Patrolling: {
+      case ActorState.Patrolling:
         this.patrol();
         break;
-      }
-      case ActorState.Guarding: {
+      case ActorState.Guarding:
         this.guarding();
         break;
-      }
-      case ActorState.Angry: {
-        this.chasePlayer();
+      case ActorState.Angry:
+        let adjToPlayer = distance(this.x, this.y, this.gs.player.x, this.gs.player.y) <= 1;
+        if (adjToPlayer) {
+          this.gs.addMessage("The guard hits you!");
+          this.gs.player.takeDamage(1);
+          this.gs.checkForDeath("guard");
+        } else {
+          this.chasePlayer();
+        }
         break;
-      }
-      case ActorState.Afraid: {
+      case ActorState.Afraid:
         this.actAfraid(this.gs);
         break;
-      }
-      case ActorState.Investigating: {
+      case ActorState.Investigating:
         this.investigate();
         break;
-      }
-      case ActorState.ReturningToPost: {
+      case ActorState.ReturningToPost:
         this.returnToPost();
         break;
-      }
     }
 
     this.attentionCone = this.gs.computeAttentionCone(this);
@@ -598,7 +599,7 @@ export class Wasp extends Actor {
     if (stingPlayer) {
       this.gs.addMessage("The wasp stings you!");
       this.gs.player.takeDamage(1);
-      this.gs.checkForDeath();
+      this.gs.checkForDeath("wasp");
     } else {
       // If we can't sting the player, do a random move    
       let dx = 0;
