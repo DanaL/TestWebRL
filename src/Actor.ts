@@ -233,10 +233,19 @@ export class Guard extends Actor {
 
     const dx = nextX - this.x, dy = nextY - this.y;
     if (dx !== 0 || dy !== 0) {
-      this.facingDx = dx;
-      this.facingDy = dy;
       this.gs.tryMove(dx, dy, null, this);
     }
+
+    this.facingDx = 0;
+    if (this.gs.player.x < this.x)
+      this.facingDx = -1;
+    else if (this.gs.player.x > this.x)
+      this.facingDx = 1;
+    this.facingDy = 0;
+    if (this.gs.player.y < this.y)
+      this.facingDy = -1;
+    else if (this.gs.player.y > this.y)
+      this.facingDy = 1;
   }
 
   private investigate(): void {
