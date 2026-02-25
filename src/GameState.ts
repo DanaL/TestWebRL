@@ -8,7 +8,7 @@ import { Item } from "./Item";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { loadMap } from "./MapLoader";
-import { bresenham, adj8Locs } from "./Utils";
+import { lerpLine, adj8Locs } from "./Utils";
 
 export class GameState {
   readonly width: number;
@@ -226,7 +226,7 @@ export class GameState {
   async throwItem(item: Item, targetX: number, targetY: number, game: Game): Promise<void> {
     const FRAME_MS = 50;
     let path: [number, number][] = [];
-    for (const loc of bresenham(this.player.x, this.player.y, targetX, targetY).slice(1)) {
+    for (const loc of lerpLine(this.player.x, this.player.y, targetX, targetY).slice(1)) {
       path.push(loc);
       if (this.occupied(loc[0], loc[1]))
         break;

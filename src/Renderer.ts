@@ -2,7 +2,7 @@ import * as ROT from "rot-js";
 import { ActorState, Adventurer } from "./Actor";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
-import { bresenham, distance } from "./Utils";
+import { lerpLine, distance } from "./Utils";
 
 type Cell = { glyph: string; fg: string; bg: string | null; sx: number; sy: number };
 
@@ -122,7 +122,7 @@ export class Renderer {
     }
 
     if (state.throwTarget) {
-      const line = bresenham(state.player.x, state.player.y, state.throwTarget.x, state.throwTarget.y);
+      const line = lerpLine(state.player.x, state.player.y, state.throwTarget.x, state.throwTarget.y);
       for (let i = 1; i < line.length; i++) {
         const [wx, wy] = line[i];
         const sx = wx - camX;

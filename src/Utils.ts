@@ -4,27 +4,30 @@ export const MOVE_KEYS: Record<string, [number, number]> = {
   h: [-1, 0], j: [0, 1], k: [0, -1], l: [1, 0]
 };
 
-export function bresenham(x0: number, y0: number, x1: number, y1: number): [number, number][] {
+function diagDistance(x0: number, y0: number, x1: number, y1: number): number {
+   return Math.max(Math.abs(x0 - x1), Math.abs(y0 - y1));
+}
+
+function roundPt(pt: [number, number]): [number, number] {
+  return [ Math.round(pt[0]), Math.round(pt[1]) ];
+}
+
+function lerp(start: number, end: number, t: number) {
+  return start * (1.0 - t) + end * t;
+}
+
+function lerpPts(x0: number, y0: number, x1: number, y1: number, t: number): [number, number] {
+  return [ lerp(x0, x1, t), lerp(y0, y1, t) ];
+}
+
+export function lerpLine(x0: number, y0: number, x1: number, y1: number): [number, number][] {
   const pts: [number, number][] = [];
-  let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-  let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-  let err = dx + dy;
-  
-  while (true) {
-    pts.push([x0, y0]);
-    if (x0 === x1 && y0 === y1) 
-      break;
-    const e2 = 2 * err;
-    if (e2 >= dy) { 
-      err += dy; 
-      x0 += sx; 
-    }
-    if (e2 <= dx) { 
-      err += dx; 
-      y0 += sy; 
-    }
+  let n = diagDistance(x0, y0, x1, y1);
+  for (let step = 0; step <= n; step++) {
+    let t = n === 0 ? 0.0 : step / n;
+    pts.push(roundPt(lerpPts(x0, y0, x1, y1, t)));
   }
-  
+
   return pts;
 }
 
