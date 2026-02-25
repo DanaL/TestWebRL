@@ -17,8 +17,10 @@ export class MenuController extends InputController {
 
   handleInput(e: KeyboardEvent): void {
     if (e.key === 's' || e.key === 'ArrowDown' || e.key === 'j') {
+      e.preventDefault();
       this.menu.currRow = Math.min(this.menu.currRow + 1, this.menu.itemCount - 1);
     } else if (e.key === 'w' || e.key === 'ArrowUp' || e.key === 'k') {
+      e.preventDefault();
       this.menu.currRow = Math.max(this.menu.currRow - 1, 0);
     } else if (e.key === 'Escape') {
       this.game.popPopup();
