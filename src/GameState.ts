@@ -144,7 +144,8 @@ export class GameState {
     this.player.turnsSinceSeen = 0;
     if (!this.isAlerted) {
       this.isAlerted = true;
-      const popup = new Popup("", "Cheese it! You've been spotted!", 3, 10, 32);
+      this.addMessage("Cheese it! You've been spotted!");
+      const popup = new Popup("", "Cheese it! You've been spotted!", 3, 10, 32);      
       this.game.pushPopup(popup);
       this.game.pushInputController(new InfoPopupController(this.game));
 
